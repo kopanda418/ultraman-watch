@@ -37,12 +37,22 @@ body {
 }
 
 /* ── ヘッダー ──────────────────────────────── */
+/* タブと絞り込みを内包し、スクロールしても画面上部に残る */
 .masthead {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: grid;
+  gap: 0.55rem;
+  padding: calc(env(safe-area-inset-top) + 0.8rem) 1.1rem 0.6rem;
+  background: var(--bg);
+  border-bottom: 1px solid var(--hairline);
+}
+
+.masthead-top {
   display: flex;
   align-items: center;
   gap: 0.9rem;
-  padding: calc(env(safe-area-inset-top) + 1.1rem) 1.1rem 1rem;
-  border-bottom: 1px solid var(--hairline);
 }
 
 .masthead h1 {
@@ -83,10 +93,17 @@ body {
 }
 
 /* ── タブ ────────────────────────────────── */
+.masthead-nav { display: flex; align-items: center; gap: 0.5rem; }
+
+/* 横スクロールはさせるが、ヘッダーの高さを食うスクロールバーは出さない */
+.tabs, .chips { scrollbar-width: none; }
+.tabs::-webkit-scrollbar, .chips::-webkit-scrollbar { display: none; }
+
 .tabs {
   display: flex;
   gap: 0.4rem;
-  padding: 0.8rem 1.1rem 0;
+  flex: 1 1 auto;
+  min-width: 0;
   overflow-x: auto;
 }
 .tab {
@@ -105,7 +122,44 @@ body {
 .tally { font-variant-numeric: tabular-nums; opacity: 0.7; }
 
 /* ── 絞り込み ────────────────────────────── */
-.filters { padding: 0.6rem 1.1rem 0; display: grid; gap: 0.35rem; }
+.filter-bar { flex: none; display: flex; align-items: center; gap: 0.25rem; }
+
+.filter-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  background: transparent;
+  border: 1px solid var(--hairline);
+  border-radius: 999px;
+  color: var(--silver);
+  font: inherit;
+  font-size: 0.78rem;
+  padding: 0.28rem 0.7rem;
+  cursor: pointer;
+  white-space: nowrap;
+}
+/* 絞り込みが効いている間は、たたんでいても効いていると分かるようにする */
+.filter-toggle.is-on { border-color: var(--fg); color: var(--fg); font-weight: 500; }
+.filter-toggle .caret { font-size: 0.65rem; transition: transform 0.15s; }
+.filter-toggle[aria-expanded='true'] .caret { transform: rotate(180deg); }
+
+.filter-clear {
+  flex: none;
+  background: transparent;
+  border: none;
+  color: var(--silver);
+  font: inherit;
+  font-size: 1rem;
+  line-height: 1;
+  padding: 0.25rem 0.3rem;
+  cursor: pointer;
+}
+
+.filter-toggle:focus-visible,
+.filter-clear:focus-visible { outline: 2px solid var(--timer-idle); outline-offset: 2px; }
+
+.filters { display: grid; gap: 0.35rem; }
+.filters[hidden] { display: none; } /* display 指定は hidden 属性より強いので明示する */
 .chips { display: flex; gap: 0.35rem; overflow-x: auto; }
 .chip {
   flex: none;
