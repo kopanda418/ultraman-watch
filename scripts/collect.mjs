@@ -146,7 +146,7 @@ async function enrichMissingDates(items) {
         const text = $('body').text().replace(/\s+/g, ' ');
         const idx = text.indexOf('開催期間');
         if (idx !== -1) {
-          const { start, end } = detectEventPeriod(text.slice(idx, idx + 60));
+          const { start, end } = detectEventPeriod(text.slice(idx, idx + 60), item.publishedAt);
           if (start) {
             item.eventDate = start;
             item.eventEndDate = end;
@@ -214,18 +214,27 @@ for (const item of fresh) {
 // 類似判定の対象は直近 500 件までに抑える（際限なく増やさない）
 seen.titles = [...runTitles, ...seen.titles].slice(0, 500);
 
-// 既に溜まっている分の扱い。
-// 既報の項目は newItems に入らないため、あとから開催日が分かっても
-// 放っておくと「日程未確定」のまま残ってしまう。今回の収集で日付が
-// 取れていれば、ここで既存分にも反映する。
+// 既に溜まっている分の扱い。既報の項目は newItems に入らないので、
+// 何もしないと取り込んだ当時の解釈のまま固定されてしまう。
 const freshById = new Map(fresh.map((i) => [i.id, i]));
+
+// 保存済みの項目も、いまのルールで日付を取り直す。
+// これで日付の読み取りを直したとき、過去に取り込んだ分にも遡って効く。
+// 見出しから日付が読めない項目（本文から補ったものなど）は触らない。
+const reinterpret = (item) => {
+  const { start, end } = detectEventPeriod(`${item.title} ${item.summary ?? ''}`, item.publishedAt);
+  return start ? { ...item, eventDate: start, eventEndDate: end } : item;
+};
+
 const carried = store.items
+  .map(reinterpret)
+  // それでも日付が分からないものは、今回の収集で取れていれば補う
   .map((item) => {
     const found = freshById.get(item.id);
-    if (!found?.eventDate || item.eventDate) return item;
+    if (item.eventDate || !found?.eventDate) return item;
     return { ...item, eventDate: found.eventDate, eventEndDate: found.eventEndDate ?? null };
   })
-  // 日が過ぎたものはここで落ちていく（上で日付が判明したものも含めて判定する）
+  // 日が過ぎたものはここで落ちていく（上で日付が変わったものも含めて判定する）
   .filter((i) => !isStale(i));
 
 const merged = sortForDisplay([...newItems, ...carried]).slice(0, KEEP_ITEMS);

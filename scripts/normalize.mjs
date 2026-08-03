@@ -93,11 +93,21 @@ export function detectRegion(text) {
 const pad = (n) => String(n).padStart(2, '0');
 
 // 「YYYY年M月D日」「YYYY/M/D」「M月D日」を出現順に拾う。
-// 「2026年6月5日(金)〜11月30日(月)」のように終了側の年が省略されることが多いため、
-// 年が無い日付は直前に出た年を引き継ぐ。月が戻るときだけ年跨ぎとみなす。
+// 年が省略された日付の年をどう補うかが肝で、二段構えにしている。
+//   1. 同じ文の中に既に年付きの日付があれば、その年を引き継ぐ
+//      （「2026年6月5日(金)〜11月30日(月)」の後半。月が戻るときだけ翌年）
+//   2. 手掛かりが無ければ、記事が書かれた日を基準にする
+//      （「12月29日開催」なら、その記事が出た年の12月29日）
+// 2 で現在年を使うと、古い記事のイベントが未来の予定に化けて
+// isStale をすり抜ける。基準は必ず記事の公開日を渡すこと。
 const DATE_RE = /(\d{4})年\s*(\d{1,2})月\s*(\d{1,2})日|(\d{4})[/.-](\d{1,2})[/.-](\d{1,2})|(\d{1,2})月\s*(\d{1,2})日/g;
 
-export function detectEventPeriod(text, fallbackYear = new Date().getFullYear()) {
+export function detectEventPeriod(text, reference = new Date()) {
+  const ref = reference instanceof Date ? new Date(reference) : new Date(reference ?? Date.now());
+  const base = Number.isNaN(ref.getTime()) ? new Date() : ref;
+  const refYear = base.getFullYear();
+  const refMonth = base.getMonth() + 1;
+
   const dates = [];
   let prevYear = null;
   let prevMonth = null;
@@ -111,9 +121,15 @@ export function detectEventPeriod(text, fallbackYear = new Date().getFullYear())
     else {
       month = Number(m[7]);
       day = Number(m[8]);
-      year = prevYear ?? fallbackYear;
-      // 「12月20日〜1月10日」のような年跨ぎ
-      if (prevMonth !== null && month < prevMonth) year += 1;
+      if (prevYear !== null) {
+        year = prevYear;
+        // 「12月20日〜1月10日」のような年跨ぎ
+        if (prevMonth !== null && month < prevMonth) year += 1;
+      } else {
+        year = refYear;
+        // 記事より前の月なら、翌年の予定を指していると読む
+        if (month < refMonth) year += 1;
+      }
     }
     if (month < 1 || month > 12 || day < 1 || day > 31) continue;
     dates.push(`${year}-${pad(month)}-${pad(day)}`);
@@ -159,7 +175,8 @@ export function normalizeItem(raw) {
 
   const haystack = `${title} ${raw.summary ?? ''}`;
   const region = detectRegion(haystack);
-  const { start: eventDate, end: eventEndDate } = detectEventPeriod(haystack);
+  // 年の省略を補う基準は記事が書かれた日。現在日を使うと古い記事が未来に化ける
+  const { start: eventDate, end: eventEndDate } = detectEventPeriod(haystack, raw.publishedAt);
 
   return {
     id: sha1(url),
