@@ -140,11 +140,13 @@ export function normalizeItem(raw) {
   };
 }
 
-// 関東優先 → 開催日が近い順 → 新しく見つかった順
+// 関東優先 → 開催日が新しい順（降順） → 新しく見つかった順
+// 開催日は降順。過去のイベントは収集時に除外しているので、
+// 先頭に来るのは「一番先の予定」になる。
 export function sortForDisplay(items) {
   return [...items].sort((a, b) => {
     if (a.isKanto !== b.isKanto) return a.isKanto ? -1 : 1;
-    if (a.eventDate && b.eventDate) return a.eventDate.localeCompare(b.eventDate);
+    if (a.eventDate && b.eventDate) return b.eventDate.localeCompare(a.eventDate);
     if (a.eventDate) return -1;
     if (b.eventDate) return 1;
     return (b.firstSeen ?? '').localeCompare(a.firstSeen ?? '');
