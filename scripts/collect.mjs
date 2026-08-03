@@ -37,7 +37,21 @@ if (!force && everyNDays > 1 && epochDay % everyNDays !== 0) {
   process.exit(0);
 }
 
-const rss = new Parser({ headers: { 'User-Agent': UA }, timeout: 20000 });
+const rss = new Parser({
+  headers: { 'User-Agent': UA },
+  timeout: 20000,
+  // Google ニュースの item には媒体を示す <source url="..."> が付く。
+  // 元記事のURLは分からないが、どのサイトの記事かはこれで分かる。
+  customFields: { item: [['source', 'source', { keepArray: true }]] },
+});
+
+const hostOf = (url) => {
+  try {
+    return new URL(url).hostname.replace(/^www\./, '');
+  } catch {
+    return null;
+  }
+};
 
 async function fetchRss(src) {
   const feed = await rss.parseURL(src.url);
@@ -46,6 +60,7 @@ async function fetchRss(src) {
     title: it.title,
     summary: (it.contentSnippet ?? it.content ?? '').replace(/<[^>]+>/g, ''),
     publishedAt: it.isoDate ?? null,
+    publisherHost: hostOf(it.source?.[0]?.$?.url),
     sourceId: src.id,
     sourceName: src.name,
     category: src.category,
@@ -136,30 +151,112 @@ const readJson = async (p, fallback) => {
 // 他サイトは構造がバラバラで確度が低いため対象外（BACKLOG.md 参照）。
 const DATE_ENRICH_SOURCE_IDS = ['tsuburaya-event'];
 
+// ニュース検索で拾った記事は元URLに到達できない（DECISIONS.md）。
+// ただし媒体が円谷ステーション自身なら、公式サイトの検索APIでタイトルから
+// 同じ記事を引き当てられる。robots.txt が許可している公開APIで、鍵も要らない。
+const OFFICIAL_HOST = 'm-78.jp';
+// イベントページだけを対象にする。開催期間が載っているのはここだけで、
+// ニュース記事のほうを引き当てても日付は取れなかった（実地確認・2026-08-03）。
+const OFFICIAL_EVENT_API = 'https://m-78.jp/wp-json/wp/v2/event';
+// 同じシリーズの別公演（「福岡公演」と「神奈川公演」など）が 0.75 前後で
+// 並ぶため、取り違えないよう高めに置く。
+const TITLE_MATCH_THRESHOLD = 0.9;
+
+// Google ニュースのタイトルは「記事名 – サイトの飾り – 媒体名」のように
+// 区切りで飾りが付く。先頭の記事名だけにしないと検索が当たらない。
+// 区切りは前後に空白があるものだけ見る（「60周年展-ひらかたパーク」を割らないため）。
+const stripDecoration = (title) => title.split(/\s+[-–—|｜]\s+/)[0].trim();
+
+// WordPress の検索APIはタイトルを文字参照のまま返す。
+const decodeEntities = (s) =>
+  s
+    .replace(/&#(\d+);/g, (_, n) => String.fromCodePoint(Number(n)))
+    .replace(/&#x([0-9a-f]+);/gi, (_, n) => String.fromCodePoint(parseInt(n, 16)))
+    .replace(/&quot;/g, '"')
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&amp;/g, '&');
+
+// タイトルから公式サイトのイベントページを探す。見つからなければ null。
+// 毎年開催されるイベントは同名のページが何本も残っているため、
+// 同点なら新しいほうを採る（API の既定が新着順なので先勝ちでよい）。
+async function searchOfficialEvent(title) {
+  const endpoint = new URL(OFFICIAL_EVENT_API);
+  endpoint.searchParams.set('search', title);
+  endpoint.searchParams.set('per_page', '5');
+  const res = await fetch(endpoint, { headers: { 'User-Agent': UA } });
+  if (!res.ok) return null;
+
+  const want = titleKey(title);
+  let best = null;
+  for (const hit of await res.json()) {
+    const score = similarity(want, titleKey(decodeEntities(hit.title?.rendered ?? '')));
+    if (score < TITLE_MATCH_THRESHOLD) continue;
+    if (!best || score > best.score) best = { score, url: hit.link };
+  }
+  return best?.url ?? null;
+}
+
+// 記事本文の「開催期間」ラベルの直後から日付を読む。
+// 次のラベルや注記まで読み進めると関係のない日付を拾う。
+// 例: 「開催期間 4月18日〜6月28日 ※… 開催時間※4月18日、19日は日時指定」の
+// 後半まで含めると、終了日が翌年4月18日と読まれてしまう。
+const PERIOD_LABEL = '開催期間';
+const PERIOD_END = /※|開催時間|開催場所|会場|料金|入場|住所|アクセス|主催|チケット/;
+
+async function readEventPeriod(url, publishedAt) {
+  const res = await fetch(url, { headers: { 'User-Agent': UA } });
+  if (!res.ok) return null;
+  const $ = cheerio.load(await res.text());
+  const text = $('body').text().replace(/\s+/g, ' ');
+  const idx = text.indexOf(PERIOD_LABEL);
+  if (idx === -1) return null;
+
+  const after = text.slice(idx + PERIOD_LABEL.length, idx + PERIOD_LABEL.length + 160);
+  const cut = after.search(PERIOD_END);
+  const { start, end } = detectEventPeriod(cut === -1 ? after : after.slice(0, cut), publishedAt);
+  return start ? { start, end } : null;
+}
+
 async function enrichMissingDates(items) {
-  const targets = items.filter((i) => !i.eventDate && DATE_ENRICH_SOURCE_IDS.includes(i.sourceId));
-  for (const item of targets) {
+  const searched = new Map(); // 同じ記事を二度探しに行かないための控え
+  const filled = { feed: 0, search: 0 };
+
+  for (const item of items) {
+    if (item.eventDate) continue;
+
+    let url = null;
+    let via = 'feed';
     try {
-      const res = await fetch(item.url, { headers: { 'User-Agent': UA } });
-      if (res.ok) {
-        const $ = cheerio.load(await res.text());
-        const text = $('body').text().replace(/\s+/g, ' ');
-        const idx = text.indexOf('開催期間');
-        if (idx !== -1) {
-          const { start, end } = detectEventPeriod(text.slice(idx, idx + 60), item.publishedAt);
-          if (start) {
-            item.eventDate = start;
-            item.eventEndDate = end;
-            // eventDate を含む altKey を作り直す（重複判定の精度を保つため）
-            item.altKey = sha1(`${titleKey(item.title)}|${start}`);
-          }
+      if (DATE_ENRICH_SOURCE_IDS.includes(item.sourceId)) {
+        url = item.url;
+      } else if (item.publisherHost === OFFICIAL_HOST) {
+        via = 'search';
+        const key = titleKey(item.title);
+        if (!searched.has(key)) {
+          searched.set(key, await searchOfficialEvent(stripDecoration(item.title)));
+          await sleep(POLITE_DELAY_MS);
         }
+        url = searched.get(key);
       }
+      if (!url) continue;
+
+      const period = await readEventPeriod(url, item.publishedAt);
+      await sleep(POLITE_DELAY_MS);
+      if (!period) continue;
+
+      item.eventDate = period.start;
+      item.eventEndDate = period.end;
+      // eventDate を含む altKey を作り直す（重複判定の精度を保つため）
+      item.altKey = sha1(`${titleKey(item.title)}|${period.start}`);
+      filled[via] += 1;
     } catch {
       // 取れなくても致命的ではないので無視して続行する
     }
-    await sleep(POLITE_DELAY_MS);
   }
+
+  console.log(`開催日の補完: 収集元のページから ${filled.feed} 件 / 公式検索で辿って ${filled.search} 件`);
 }
 
 // ── 実行 ──────────────────────────────────────────────────
@@ -216,7 +313,13 @@ seen.titles = [...runTitles, ...seen.titles].slice(0, 500);
 
 // 既に溜まっている分の扱い。既報の項目は newItems に入らないので、
 // 何もしないと取り込んだ当時の解釈のまま固定されてしまう。
-const freshById = new Map(fresh.map((i) => [i.id, i]));
+// 突き合わせには終了済みを落とす前の candidates を使う。fresh だと
+// 「本文を読んで終了済みと分かった」項目が抜け落ち、保存済みの古い日付を
+// 直せないまま残ってしまう。
+const freshById = new Map(candidates.map((i) => [i.id, i]));
+// ニュース検索の中継URLは張り直されることがあり、同じ記事でも id が変わる。
+// 日付が取れたものはタイトルからも引けるようにして、取りこぼしを防ぐ。
+const freshByTitle = new Map(candidates.filter((i) => i.eventDate).map((i) => [i.titleKey, i]));
 
 // 保存済みの項目も、いまのルールで日付を取り直す。
 // これで日付の読み取りを直したとき、過去に取り込んだ分にも遡って効く。
@@ -228,10 +331,11 @@ const reinterpret = (item) => {
 
 const carried = store.items
   .map(reinterpret)
-  // それでも日付が分からないものは、今回の収集で取れていれば補う
+  // 本文から補った日付は見出しから読み直せないので、今回の収集で取れた値を
+  // そのまま採る。読み取りを直したとき、補完済みの分にも遡って効くようにする。
   .map((item) => {
-    const found = freshById.get(item.id);
-    if (item.eventDate || !found?.eventDate) return item;
+    const found = freshById.get(item.id) ?? freshByTitle.get(item.titleKey);
+    if (!found?.eventDate) return item;
     return { ...item, eventDate: found.eventDate, eventEndDate: found.eventEndDate ?? null };
   })
   // 日が過ぎたものはここで落ちていく（上で日付が変わったものも含めて判定する）

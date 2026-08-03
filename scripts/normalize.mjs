@@ -186,6 +186,9 @@ export function normalizeItem(raw) {
     sourceId: raw.sourceId,
     sourceName: raw.sourceName,
     category: raw.category,
+    // ニュース検索経由のとき、記事を出した媒体のドメイン。
+    // 元記事URLは分からないが、どのサイトの記事かはここで分かる。
+    publisherHost: raw.publisherHost ?? null,
     publishedAt: raw.publishedAt ?? null,
     eventDate,
     eventEndDate,
