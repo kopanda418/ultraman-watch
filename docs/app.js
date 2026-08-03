@@ -5,7 +5,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 const SUPABASE_URL = 'https://ijtywsqdudtqfkliwigo.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_IXW1ziW7LmN46R8YZznXmw_bY_4Jd6O';
 // `npx web-push generate-vapid-keys` で出た公開鍵。
-const VAPID_PUBLIC_KEY = '';
+const VAPID_PUBLIC_KEY = 'BAt9oygC3Y1-rXA0ieOxmXUHrAhfiu58r5-QHhC0Mm90QD4CjGs0_Ovy6oom2UixyspU4PLVT4jnhhUSVTPXDro';
 
 const supabase =
   SUPABASE_URL && SUPABASE_ANON_KEY ? createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
