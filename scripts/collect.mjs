@@ -214,11 +214,21 @@ for (const item of fresh) {
 // 類似判定の対象は直近 500 件までに抑える（際限なく増やさない）
 seen.titles = [...runTitles, ...seen.titles].slice(0, 500);
 
-// 既に溜まっている分も、日が過ぎたものはここで落ちていく
-const merged = sortForDisplay([...newItems, ...store.items.filter((i) => !isStale(i))]).slice(
-  0,
-  KEEP_ITEMS,
-);
+// 既に溜まっている分の扱い。
+// 既報の項目は newItems に入らないため、あとから開催日が分かっても
+// 放っておくと「日程未確定」のまま残ってしまう。今回の収集で日付が
+// 取れていれば、ここで既存分にも反映する。
+const freshById = new Map(fresh.map((i) => [i.id, i]));
+const carried = store.items
+  .map((item) => {
+    const found = freshById.get(item.id);
+    if (!found?.eventDate || item.eventDate) return item;
+    return { ...item, eventDate: found.eventDate, eventEndDate: found.eventEndDate ?? null };
+  })
+  // 日が過ぎたものはここで落ちていく（上で日付が判明したものも含めて判定する）
+  .filter((i) => !isStale(i));
+
+const merged = sortForDisplay([...newItems, ...carried]).slice(0, KEEP_ITEMS);
 
 await mkdir(path.dirname(ITEMS_PATH), { recursive: true });
 await writeFile(
