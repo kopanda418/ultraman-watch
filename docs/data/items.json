@@ -1,6 +1,6 @@
 {
-  "generatedAt": "2026-08-03T13:28:56.720Z",
-  "batchId": "2026-08-03T13:28:56.720Z",
+  "generatedAt": "2026-08-03T13:54:54.843Z",
+  "batchId": "2026-08-03T13:54:54.843Z",
   "newCount": 0,
   "items": [
     {
@@ -351,23 +351,6 @@
       "batch": "2026-08-03"
     },
     {
-      "id": "f072496445371c63",
-      "url": "https://news.google.com/rss/articles/CBMiZkFVX3lxTFBsTkJWcml0bklxWnZKRnc0QUp4SEtka3Z4V3lLVlJLY19weTF0RlA5RWl4ZnBHdlktcVZYTWNzU0dnUlBIcm9HSWswcS05WlNpcjhVOHlkLWZROU1wUTVxUmpTVHRUQQ?oc=5",
-      "title": "「ウルトラマンオメガショー」12月29日開催！撮影会参加者にウルトラヒーローステッカープレゼント（大牟田市） - 筑後いこい",
-      "summary": "「ウルトラマンオメガショー」12月29日開催！撮影会参加者にウルトラヒーローステッカープレゼント（大牟田市） 筑後いこい",
-      "sourceId": "news-show",
-      "sourceName": "ニュース検索（ショー）",
-      "category": "news",
-      "publishedAt": "2025-12-26T08:00:00.000Z",
-      "eventDate": "2026-12-29",
-      "prefectures": [],
-      "isKanto": false,
-      "titleKey": "ウルトラマンオメガショー撮影会参加者にウルトラヒーローステッカープレゼント筑後いこい",
-      "altKey": "ffc0f838d33ecad8",
-      "firstSeen": "2026-08-03T06:54:53.151Z",
-      "batch": "2026-08-03"
-    },
-    {
       "id": "5dc4eac270ab380f",
       "url": "https://news.google.com/rss/articles/CBMiREFVX3lxTE45YmdNZHVVdlpnbEJodmtEdFJYTE9OelBsNnBja2dWc2lqeDNMZlp1R1pQRWdPelIydERldVBublFqd1E5?oc=5",
       "title": "「ウルトラヒーローズ THE LIVE ～紡ぎ続ける物語～」大阪公演2026年11月28日(土)開催決定！ – ウルトラマン・円谷プロ公式 - 円谷プロ公式サイト",
@@ -384,43 +367,8 @@
       "titleKey": "ウルトラヒーローズthelive紡ぎ続ける物語大阪公演ウルトラマン円谷プロ公式円谷プロ公式サイト",
       "altKey": "e0027a554791a7d8",
       "firstSeen": "2026-08-03T06:54:53.151Z",
-      "batch": "2026-08-03"
-    },
-    {
-      "id": "1ced8df65c94cf9f",
-      "url": "https://news.google.com/rss/articles/CBMiT0FVX3lxTE1aMGtWWEQwcFV5WkhrRUc1QkhDOTJxQ2w3TVVlcXgzYVB5ZkJoUWN1S0pRd1BpOHE3Unk3LW0zMUNDa3VhUFBadlNsUXNVYzA?oc=5",
-      "title": "岡山城とウルトラマンがコラボした「50年史記念展」11月3日より岡山城で開催！ - 電撃ホビーウェブ",
-      "summary": "岡山城とウルトラマンがコラボした「50年史記念展」11月3日より岡山城で開催！ 電撃ホビーウェブ",
-      "sourceId": "news-handshake",
-      "sourceName": "ニュース検索（撮影・握手会）",
-      "category": "news",
-      "publishedAt": "2016-10-24T07:00:00.000Z",
-      "eventDate": "2026-11-03",
-      "prefectures": [
-        "岡山"
-      ],
-      "isKanto": false,
-      "titleKey": "岡山城とウルトラマンがコラボした史記念展より岡山城で電撃ホビーウェブ",
-      "altKey": "ef40c3adc788d8e4",
-      "firstSeen": "2026-08-03T06:54:53.151Z",
-      "batch": "2026-08-03"
-    },
-    {
-      "id": "3740a630ddb474ab",
-      "url": "https://news.google.com/rss/articles/CBMiREFVX3lxTE9PWmpDYmVWTEkxUFRVc2xUZ3dZUDF0alJ5XzNQVFRodmpvQmd0X2FlbERwVFBrRzItMG9LN204b3R2Vmdm?oc=5",
-      "title": "11月1日(金)からスタート！「はじめてのウルトラマン展」会場発売グッズを公開！ - 円谷プロ公式サイト",
-      "summary": "11月1日(金)からスタート！「はじめてのウルトラマン展」会場発売グッズを公開！ 円谷プロ公式サイト",
-      "sourceId": "news-sale",
-      "sourceName": "ニュース検索（特売・セール）",
-      "category": "sale",
-      "publishedAt": "2024-10-31T07:00:00.000Z",
-      "eventDate": "2026-11-01",
-      "prefectures": [],
-      "isKanto": false,
-      "titleKey": "からスタートはじめてのウルトラマン展会場発売グッズを円谷プロ公式サイト",
-      "altKey": "59bfded568e44c1d",
-      "firstSeen": "2026-08-03T06:54:53.151Z",
-      "batch": "2026-08-03"
+      "batch": "2026-08-03",
+      "eventEndDate": null
     },
     {
       "id": "5cd184a13b3e797a",
@@ -439,7 +387,8 @@
       "titleKey": "周年記念ウルトラマンマラソンinjヴィレッジ福島でに参加エントリー開始",
       "altKey": "cc9a5d516bbf6aa5",
       "firstSeen": "2026-08-03T06:54:53.151Z",
-      "batch": "2026-08-03"
+      "batch": "2026-08-03",
+      "eventEndDate": null
     },
     {
       "id": "b7eaa05ea6a6f23d",
@@ -476,7 +425,8 @@
       "titleKey": "ultramangallery平成climax展大阪でよりウルトラマン円谷プロ公式mjp",
       "altKey": "460fd4f1f308cc78",
       "firstSeen": "2026-08-03T12:33:01.272Z",
-      "batch": "2026-08-03"
+      "batch": "2026-08-03",
+      "eventEndDate": null
     },
     {
       "id": "352b7a2c95b75729",
@@ -495,7 +445,8 @@
       "titleKey": "ultramangallery平成climax展大阪でより",
       "altKey": "78675b1753a7cd8f",
       "firstSeen": "2026-08-03T06:54:53.151Z",
-      "batch": "2026-08-03"
+      "batch": "2026-08-03",
+      "eventEndDate": null
     },
     {
       "id": "1f4df790194aba19",
@@ -512,7 +463,8 @@
       "titleKey": "ウルトラマンシリーズ周年×beybladexコラボウルトラマンティガモデルがに発売円谷プロ公式サイト",
       "altKey": "30eb41510f95d173",
       "firstSeen": "2026-08-03T06:54:53.151Z",
-      "batch": "2026-08-03"
+      "batch": "2026-08-03",
+      "eventEndDate": null
     },
     {
       "id": "9760efeb39eb9fae",
@@ -555,23 +507,6 @@
       "eventEndDate": null
     },
     {
-      "id": "2a2eb210539d8fe8",
-      "url": "https://news.google.com/rss/articles/CBMihAFBVV95cUxPVTIyWFp4QVpiaGllUzFMQWU3bzViT0pSZnRQdWRGVHlQVUduZnRnXzhVMHNSRW9qdWRfSjBINnJ0ZURDenpIZmJZUmNVWElhekx0YmM1OHpFRUUtTDI1SzBDbzRhNVpkM2VsR09nTVc1NzFJSGd4M1hTQU1keUxEZk1WQU4?oc=5",
-      "title": "ウルトラマンシリーズ コラボTシャツなど ドンキ3店舗にて9月6日発売! - コラボカフェ",
-      "summary": "ウルトラマンシリーズ コラボTシャツなど ドンキ3店舗にて9月6日発売! コラボカフェ",
-      "sourceId": "news-sale",
-      "sourceName": "ニュース検索（特売・セール）",
-      "category": "sale",
-      "publishedAt": "2025-09-06T07:00:00.000Z",
-      "eventDate": "2026-09-06",
-      "prefectures": [],
-      "isKanto": false,
-      "titleKey": "ウルトラマンシリーズコラボtシャツなどドンキ店舗にて発売コラボカフェ",
-      "altKey": "8472fcc418166735",
-      "firstSeen": "2026-08-03T06:54:53.151Z",
-      "batch": "2026-08-03"
-    },
-    {
       "id": "133ff06ca82c3dad",
       "url": "https://m-78.jp/event/post-156933",
       "title": "ウルトラマンテオショー／山陽新聞社さん太広場",
@@ -604,7 +539,8 @@
       "titleKey": "ウルトラマンあなたの選択が物語を作る没入型体験イベントが横浜みなとみらいで開幕yahooニュース",
       "altKey": "de6f07601b5249ab",
       "firstSeen": "2026-08-03T06:54:53.151Z",
-      "batch": "2026-08-03"
+      "batch": "2026-08-03",
+      "eventEndDate": null
     },
     {
       "id": "ed3c8808aa34e413",
@@ -621,7 +557,8 @@
       "titleKey": "ウルトラマンあなたの選択が物語を作る没入型体験イベントが横浜みなとみらいで開幕アニメアニメ",
       "altKey": "1d0407858ab5757c",
       "firstSeen": "2026-08-03T06:54:53.151Z",
-      "batch": "2026-08-03"
+      "batch": "2026-08-03",
+      "eventEndDate": null
     },
     {
       "id": "56d373794f8beb2b",
@@ -658,7 +595,8 @@
       "titleKey": "ウルトラマンシリーズ周年×ハンズ周年ダブルアニバーサリーを祝うultrahandsより始動",
       "altKey": "c6356e9a29a191ed",
       "firstSeen": "2026-08-03T06:54:53.151Z",
-      "batch": "2026-08-03"
+      "batch": "2026-08-03",
+      "eventEndDate": "2026-09-24"
     },
     {
       "id": "5ad503f04beacbcb",
@@ -783,7 +721,8 @@
       "titleKey": "tsuburayaimaginationガイドウル活ライフウルトラマンの日in杉並公会堂徹底レポート",
       "altKey": "7f555a33e1350a8e",
       "firstSeen": "2026-08-03T06:54:53.151Z",
-      "batch": "2026-08-03"
+      "batch": "2026-08-03",
+      "eventEndDate": null
     },
     {
       "id": "544b1df7ebd72bc6",
