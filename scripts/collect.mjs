@@ -4,7 +4,7 @@ import path from 'node:path';
 import * as cheerio from 'cheerio';
 import Parser from 'rss-parser';
 import { SOURCES, RAKUTEN } from './sources.mjs';
-import { normalizeItem, sortForDisplay, similarity } from './normalize.mjs';
+import { normalizeItem, sortForDisplay, similarity, detectEventDate, titleKey, sha1 } from './normalize.mjs';
 
 const ROOT = path.resolve(import.meta.dirname, '..');
 const SEEN_PATH = path.join(ROOT, 'state', 'seen.json');
@@ -121,9 +121,41 @@ const readJson = async (p, fallback) => {
   }
 };
 
+// タイトル・概要に開催日が無い項目を、記事本文を見に行って補完する。
+// 円谷ステーションのイベントページ（m-78.jp/event/）は「開催期間」という
+// ラベルの直後に日付が入る一定の型なので、そこだけを対象にする。
+// 他サイトは構造がバラバラで確度が低いため対象外（BACKLOG.md 参照）。
+const DATE_ENRICH_SOURCE_IDS = ['tsuburaya-event'];
+
+async function enrichMissingDates(items) {
+  const targets = items.filter((i) => !i.eventDate && DATE_ENRICH_SOURCE_IDS.includes(i.sourceId));
+  for (const item of targets) {
+    try {
+      const res = await fetch(item.url, { headers: { 'User-Agent': UA } });
+      if (res.ok) {
+        const $ = cheerio.load(await res.text());
+        const text = $('body').text().replace(/\s+/g, ' ');
+        const idx = text.indexOf('開催期間');
+        if (idx !== -1) {
+          const found = detectEventDate(text.slice(idx, idx + 60));
+          if (found) {
+            item.eventDate = found;
+            // eventDate を含む altKey を作り直す（重複判定の精度を保つため）
+            item.altKey = sha1(`${titleKey(item.title)}|${found}`);
+          }
+        }
+      }
+    } catch {
+      // 取れなくても致命的ではないので無視して続行する
+    }
+    await sleep(POLITE_DELAY_MS);
+  }
+}
+
 // ── 実行 ──────────────────────────────────────────────────
 const raw = await collectAll();
 const normalized = raw.map(normalizeItem).filter(Boolean);
+await enrichMissingDates(normalized);
 
 const seen = await readJson(SEEN_PATH, { ids: {}, altKeys: {}, titles: [] });
 seen.titles ??= [];
