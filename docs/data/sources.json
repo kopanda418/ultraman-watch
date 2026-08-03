@@ -1,0 +1,35 @@
+{
+  "generatedAt": "2026-08-03T12:49:24.698Z",
+  "sources": [
+    {
+      "name": "円谷ステーション",
+      "category": "official",
+      "url": "https://m-78.jp/feed/"
+    },
+    {
+      "name": "円谷ステーション イベント",
+      "category": "official",
+      "url": "https://m-78.jp/event/feed/"
+    },
+    {
+      "name": "ニュース検索（イベント）",
+      "category": "news",
+      "url": "https://news.google.com/rss/search?q=%E3%82%A6%E3%83%AB%E3%83%88%E3%83%A9%E3%83%9E%E3%83%B3%20%E3%82%A4%E3%83%99%E3%83%B3%E3%83%88&hl=ja&gl=JP&ceid=JP:ja"
+    },
+    {
+      "name": "ニュース検索（ショー）",
+      "category": "news",
+      "url": "https://news.google.com/rss/search?q=%E3%82%A6%E3%83%AB%E3%83%88%E3%83%A9%E3%83%9E%E3%83%B3%20%E3%82%B7%E3%83%A7%E3%83%BC%20%E9%96%8B%E5%82%AC&hl=ja&gl=JP&ceid=JP:ja"
+    },
+    {
+      "name": "ニュース検索（撮影・握手会）",
+      "category": "news",
+      "url": "https://news.google.com/rss/search?q=%E3%82%A6%E3%83%AB%E3%83%88%E3%83%A9%E3%83%92%E3%83%BC%E3%83%AD%E3%83%BC%20%E6%92%AE%E5%BD%B1%E4%BC%9A%20%E6%8F%A1%E6%89%8B%E4%BC%9A&hl=ja&gl=JP&ceid=JP:ja"
+    },
+    {
+      "name": "ニュース検索（特売・セール）",
+      "category": "sale",
+      "url": "https://news.google.com/rss/search?q=%E3%82%A6%E3%83%AB%E3%83%88%E3%83%A9%E3%83%9E%E3%83%B3%20%E3%82%B0%E3%83%83%E3%82%BA%20%E3%82%BB%E3%83%BC%E3%83%AB%20%E7%99%BA%E5%A3%B2&hl=ja&gl=JP&ceid=JP:ja"
+    }
+  ]
+}

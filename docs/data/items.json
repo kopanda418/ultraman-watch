@@ -1,7 +1,7 @@
 {
-  "generatedAt": "2026-08-03T12:33:01.272Z",
-  "batchId": "2026-08-03",
-  "newCount": 9,
+  "generatedAt": "2026-08-03T12:49:24.698Z",
+  "batchId": "2026-08-03T12:49:24.698Z",
+  "newCount": 2,
   "items": [
     {
       "id": "74a7bac783d0e53d",
@@ -1613,6 +1613,40 @@
       "altKey": "ffc0f838d33ecad8",
       "firstSeen": "2026-08-03T06:54:53.151Z",
       "batch": "2026-08-03"
+    },
+    {
+      "id": "8918e311ccabc3f4",
+      "url": "https://news.google.com/rss/articles/CBMiW0FVX3lxTE5qVTlLdGR6SEVGNnhlcnRBY1pyUGc0U05ROGx0aUhYdmZ1dTBPdXVaZ00tY195NHhBX3ZBNU1hWENLZmk0QlUyQW1nNER5Q0xSY0hYUnNsUGMyd2c?oc=5",
+      "title": "「ウルトラマンオメガショー」イオンモール大牟田で開催 撮影会も【観覧無料】 - kurumefan.com",
+      "summary": "「ウルトラマンオメガショー」イオンモール大牟田で開催 撮影会も【観覧無料】 kurumefan.com",
+      "sourceId": "news-show",
+      "sourceName": "ニュース検索（ショー）",
+      "category": "news",
+      "publishedAt": "2025-08-19T07:00:00.000Z",
+      "eventDate": null,
+      "prefectures": [],
+      "isKanto": false,
+      "titleKey": "ウルトラマンオメガショーイオンモール大牟田で撮影会もkurumefancom",
+      "altKey": "da6d23346b03e5ed",
+      "firstSeen": "2026-08-03T12:49:24.698Z",
+      "batch": "2026-08-03T12:49:24.698Z"
+    },
+    {
+      "id": "cc5e480b5b95f302",
+      "url": "https://news.google.com/rss/articles/CBMiVkFVX3lxTE9ZSE8xUGloeDlNQnQwUnYwTWd6MVBwaEpOeEI3cTBQTVRxV24weUpkSHBUUkk3QkE3c0t4ajV3LTJfNUpxSy01WTVJT2NGQTNNenZuZUdR0gFbQVVfeXFMTzRya3p3M3FVS3hMY0FVc2VHbHkyZXpXUE9KakZDaU9yZnFhdzhQWWVjVDZWQkU0WDNlSUg4Vnl3Sl8xcGVYRGlZTVdUYnJ1eGpDS1N5Tk15NFJWaw?oc=5",
+      "title": "ウルトラマン、エヴァンゲリオン、鬼滅の刃が集結！ ドローンショーフェスティバル 「STARDANCE in 横浜・八景島シーパラダイス」がついに開催 - walkerplus.com",
+      "summary": "ウルトラマン、エヴァンゲリオン、鬼滅の刃が集結！ ドローンショーフェスティバル 「STARDANCE in 横浜・八景島シーパラダイス」がついに開催 walkerplus.com",
+      "sourceId": "news-show",
+      "sourceName": "ニュース検索（ショー）",
+      "category": "news",
+      "publishedAt": "2025-12-24T08:00:00.000Z",
+      "eventDate": null,
+      "prefectures": [],
+      "isKanto": false,
+      "titleKey": "ウルトラマンエヴァンゲリオン鬼滅の刃が集結ドローンショーフェスティバルstardancein横浜八景島シーパラダイスがついにwalkerpluscom",
+      "altKey": "4e96a9408ced6fe2",
+      "firstSeen": "2026-08-03T12:49:24.698Z",
+      "batch": "2026-08-03T12:49:24.698Z"
     },
     {
       "id": "633b22ad2b23fba0",
