@@ -1,0 +1,58 @@
+name: 情報収集
+
+on:
+  # 毎日 06:00 JST に起動し、1日おきかどうかはスクリプト側で判定する。
+  # cron の */2 は月をまたぐと連続実行になるため、この形にしています。
+  schedule:
+    - cron: '0 21 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: collect
+  cancel-in-progress: false
+
+jobs:
+  collect:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+
+      - run: npm ci
+
+      - name: 収集
+        env:
+          RUN_EVERY_N_DAYS: '2'
+          FORCE: ${{ github.event_name == 'workflow_dispatch' }}
+          RAKUTEN_APP_ID: ${{ secrets.RAKUTEN_APP_ID }}
+        run: node scripts/collect.mjs
+
+      - name: 変更をコミット
+        run: |
+          git config user.name  'ultraman-watch[bot]'
+          git config user.email 'ultraman-watch@users.noreply.github.com'
+          git add docs/data/items.json state/seen.json state/last-run.json
+          if git diff --staged --quiet; then
+            echo '更新なし'
+          else
+            git commit -m "収集: $(date -u +%Y-%m-%d)"
+            git push
+          fi
+
+      # 秘密鍵に触れるのはこのステップだけ。
+      # docs/ にデプロイされる成果物とは完全に分離されています。
+      - name: 通知
+        env:
+          VAPID_PUBLIC_KEY: ${{ secrets.VAPID_PUBLIC_KEY }}
+          VAPID_PRIVATE_KEY: ${{ secrets.VAPID_PRIVATE_KEY }}
+          VAPID_SUBJECT: ${{ secrets.VAPID_SUBJECT }}
+          PUSH_SUBSCRIPTIONS: ${{ secrets.PUSH_SUBSCRIPTIONS }}
+          SITE_URL: ${{ vars.SITE_URL }}
+        run: node scripts/notify.mjs

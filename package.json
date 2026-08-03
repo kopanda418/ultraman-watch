@@ -1,0 +1,16 @@
+{
+  "name": "ultraman-watch",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "collect": "FORCE=true node scripts/collect.mjs",
+    "notify": "node scripts/notify.mjs",
+    "keys": "web-push generate-vapid-keys"
+  },
+  "dependencies": {
+    "cheerio": "^1.0.0",
+    "rss-parser": "^3.13.0",
+    "web-push": "^3.6.7"
+  }
+}

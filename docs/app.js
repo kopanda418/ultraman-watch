@@ -1,0 +1,335 @@
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+
+// ── 設定 ────────────────────────────────────────────────
+// anon キーは公開される前提のキーです。行レベルセキュリティ側で守ります。
+const SUPABASE_URL = 'https://ijtywsqdudtqfkliwigo.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_IXW1ziW7LmN46R8YZznXmw_bY_4Jd6O';
+// `npx web-push generate-vapid-keys` で出た公開鍵。
+const VAPID_PUBLIC_KEY = '';
+
+const supabase =
+  SUPABASE_URL && SUPABASE_ANON_KEY ? createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
+
+const $ = (sel) => document.querySelector(sel);
+
+// ── ピックの保存 ────────────────────────────────────────
+// 正は Supabase。IndexedDB は圏外でも見られるようにするための控えです。
+const DB_NAME = 'ultraman-watch';
+const STORE = 'picks';
+
+function openDb() {
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open(DB_NAME, 1);
+    req.onupgradeneeded = () => req.result.createObjectStore(STORE, { keyPath: 'id' });
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+}
+
+async function tx(mode, fn) {
+  const db = await openDb();
+  return new Promise((resolve, reject) => {
+    const t = db.transaction(STORE, mode);
+    const req = fn(t.objectStore(STORE));
+    t.oncomplete = () => resolve(req?.result);
+    t.onerror = () => reject(t.error);
+  });
+}
+
+const cacheAll = async (picks) => {
+  await tx('readwrite', (s) => s.clear());
+  await tx('readwrite', (s) => picks.forEach((p) => s.put(p)));
+};
+const cached = () => tx('readonly', (s) => s.getAll());
+
+const toRow = (item, by) => ({
+  id: item.id,
+  url: item.url,
+  title: item.title,
+  summary: item.summary ?? null,
+  source_name: item.sourceName ?? null,
+  event_date: item.eventDate ?? null,
+  prefectures: item.prefectures ?? [],
+  is_kanto: Boolean(item.isKanto),
+  picked_by: by,
+});
+
+const fromRow = (row) => ({
+  id: row.id,
+  url: row.url,
+  title: row.title,
+  summary: row.summary ?? '',
+  sourceName: row.source_name ?? '',
+  eventDate: row.event_date ?? null,
+  prefectures: row.prefectures ?? [],
+  isKanto: row.is_kanto,
+  pickedBy: row.picked_by ?? '',
+  pickedAt: row.picked_at ?? '',
+});
+
+// ── 状態 ────────────────────────────────────────────────
+let store = { items: [], batchId: null, generatedAt: null };
+let pickIds = new Set();
+let view = 'new';
+let session = null;
+
+const displayName = () => localStorage.getItem('display-name') || session?.user?.email || '不明';
+
+async function fetchPicks() {
+  if (!supabase || !session) return { picks: await cached(), offline: true };
+  const { data, error } = await supabase
+    .from('picks')
+    .select('*')
+    .order('picked_at', { ascending: false });
+  if (error) {
+    console.warn(error.message);
+    return { picks: await cached(), offline: true };
+  }
+  const picks = data.map(fromRow);
+  await cacheAll(picks);
+  return { picks, offline: false };
+}
+
+async function addPick(item) {
+  const { error } = await supabase.from('picks').upsert(toRow(item, displayName()));
+  if (error) throw new Error(error.message);
+}
+
+async function removePick(id) {
+  const { error } = await supabase.from('picks').delete().eq('id', id);
+  if (error) throw new Error(error.message);
+}
+
+// ── 描画 ────────────────────────────────────────────────
+const escapeHtml = (s) =>
+  String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+function itemsFor(currentView, picks) {
+  if (currentView === 'picks') return picks;
+  if (currentView === 'all') return store.items;
+  return store.items.filter((i) => i.batch === store.batchId);
+}
+
+function card(item) {
+  const el = document.createElement('article');
+  el.className = 'card';
+
+  const picked = pickIds.has(item.id);
+  const where = item.prefectures?.length ? item.prefectures.join('・') : '地域不明';
+  const when = item.eventDate ? `${item.eventDate} 開催` : '日程未確定';
+
+  el.innerHTML = `
+    <h3><a href="${item.url}" target="_blank" rel="noopener">${escapeHtml(item.title)}</a></h3>
+    ${item.summary ? `<p>${escapeHtml(item.summary)}</p>` : ''}
+    <div class="meta">
+      <span>${escapeHtml(item.sourceName)}</span>
+      <span>${when}</span>
+      <span>${escapeHtml(where)}</span>
+      ${item.isKanto ? '<span class="badge badge-kanto">関東</span>' : ''}
+      ${item.pickedBy ? `<span class="badge">${escapeHtml(item.pickedBy)}がピック</span>` : ''}
+    </div>
+    <div class="card-foot">
+      <button class="btn btn-quiet pick" aria-pressed="${picked}"${session ? '' : ' disabled'}>${
+        picked ? 'ピック済み' : 'ピックする'
+      }</button>
+      <a class="btn btn-quiet" href="${item.url}" target="_blank" rel="noopener">元記事を開く</a>
+    </div>`;
+
+  el.querySelector('.pick').addEventListener('click', async (e) => {
+    e.target.disabled = true;
+    try {
+      if (pickIds.has(item.id)) await removePick(item.id);
+      else await addPick(item);
+      await render();
+    } catch (err) {
+      $('#sync-state').textContent = `ピックを保存できませんでした: ${err.message}`;
+      e.target.disabled = false;
+    }
+  });
+
+  return el;
+}
+
+const EMPTY = {
+  new: '今回の収集では新しい情報はありませんでした。',
+  picks: '気になる記事の「ピックする」を押すと、2人のどちらの端末からも見られます。',
+  all: 'まだ情報がありません。',
+};
+
+async function render() {
+  const { picks, offline } = await fetchPicks();
+  pickIds = new Set(picks.map((p) => p.id));
+
+  $('#sync-state').textContent = !session
+    ? 'サインインするとピックを共有できます。'
+    : offline
+      ? '同期できていません。手元の控えを表示しています。'
+      : `${picks.length} 件を共有中`;
+
+  const list = $('#list');
+  list.textContent = '';
+  const items = itemsFor(view, picks);
+
+  if (items.length === 0) {
+    const empty = document.createElement('p');
+    empty.className = 'empty';
+    empty.textContent = EMPTY[view];
+    list.append(empty);
+  } else {
+    for (const item of items) list.append(card(item));
+  }
+
+  $('#tally-new').textContent = store.items.filter((i) => i.batch === store.batchId).length;
+  $('#tally-picks').textContent = pickIds.size;
+}
+
+// ── サインイン ──────────────────────────────────────────
+async function refreshSession() {
+  if (!supabase) return;
+  const { data } = await supabase.auth.getSession();
+  session = data.session;
+  $('#signin-form').hidden = Boolean(session);
+  $('#signout').hidden = !session;
+  $('#account').textContent = session ? `${displayName()} としてサインイン中` : '';
+}
+
+$('#signin').addEventListener('click', async () => {
+  const { error } = await supabase.auth.signInWithPassword({
+    email: $('#email').value.trim(),
+    password: $('#password').value,
+  });
+  if (error) {
+    $('#signin-state').textContent = 'サインインできませんでした。入力を確認してください。';
+    return;
+  }
+  $('#signin-state').textContent = '';
+  $('#password').value = '';
+  await refreshSession();
+  await render();
+  watchPicks();
+});
+
+$('#signout').addEventListener('click', async () => {
+  await supabase.auth.signOut();
+  session = null;
+  await refreshSession();
+  await render();
+});
+
+$('#display-name').addEventListener('change', (e) => {
+  localStorage.setItem('display-name', e.target.value.trim());
+  refreshSession();
+});
+
+// 相手がピックした瞬間に自分の画面へ反映する
+let watching = false;
+function watchPicks() {
+  if (!supabase || !session || watching) return;
+  watching = true;
+  supabase
+    .channel('picks')
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'picks' }, () => render())
+    .subscribe();
+}
+
+// ── 起動 ────────────────────────────────────────────────
+async function load() {
+  try {
+    const res = await fetch(`data/items.json?t=${Date.now()}`);
+    store = await res.json();
+  } catch {
+    $('#stamp').textContent = '情報を読み込めませんでした。通信状況を確認してください。';
+    return;
+  }
+
+  const newCount = store.items.filter((i) => i.batch === store.batchId).length;
+  const at = new Date(store.generatedAt);
+  $('#stamp').textContent = `最終更新 ${at.toLocaleString('ja-JP', { dateStyle: 'short', timeStyle: 'short' })}`;
+  $('#timer').classList.toggle('is-alert', newCount > 0);
+
+  $('#display-name').value = localStorage.getItem('display-name') ?? '';
+  await refreshSession();
+  await render();
+  watchPicks();
+}
+
+document.querySelectorAll('.tab').forEach((tab) => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach((t) => {
+      t.classList.remove('is-active');
+      t.setAttribute('aria-selected', 'false');
+    });
+    tab.classList.add('is-active');
+    tab.setAttribute('aria-selected', 'true');
+    view = tab.dataset.view;
+    render();
+  });
+});
+
+$('#export-picks').addEventListener('click', async () => {
+  const picks = await cached();
+  const blob = new Blob([JSON.stringify(picks, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `ultraman-picks-${new Date().toISOString().slice(0, 10)}.json`;
+  a.click();
+  URL.revokeObjectURL(a.href);
+});
+
+// ── 通知の購読 ──────────────────────────────────────────
+const urlBase64ToUint8Array = (base64) => {
+  const padded = (base64 + '='.repeat((4 - (base64.length % 4)) % 4)).replace(/-/g, '+').replace(/_/g, '/');
+  return Uint8Array.from(atob(padded), (c) => c.charCodeAt(0));
+};
+
+const isStandalone = window.matchMedia('(display-mode: standalone)').matches || navigator.standalone;
+
+if (!isStandalone) {
+  $('#push-state').textContent =
+    '共有メニューから「ホーム画面に追加」し、そこから開き直すと通知を有効にできます。';
+  $('#enable-push').disabled = true;
+}
+
+// 許可ダイアログはタップ操作の中でしか出せないため、必ずボタン経由で呼びます。
+$('#enable-push').addEventListener('click', async () => {
+  if (!VAPID_PUBLIC_KEY) {
+    $('#push-state').textContent = 'app.js の VAPID_PUBLIC_KEY が未設定です。';
+    return;
+  }
+  const permission = await Notification.requestPermission();
+  if (permission !== 'granted') {
+    $('#push-state').textContent = '通知が許可されませんでした。iPhone の設定から変更できます。';
+    return;
+  }
+  const reg = await navigator.serviceWorker.ready;
+  const sub = await reg.pushManager.subscribe({
+    userVisibleOnly: true,
+    applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY),
+  });
+  $('#push-state').textContent = '通知を有効にしました。';
+  $('#show-subscription').hidden = false;
+  $('#share-subscription').hidden = !navigator.share;
+  $('#subscription-box').value = JSON.stringify(sub.toJSON(), null, 2);
+});
+
+$('#show-subscription').addEventListener('click', () => {
+  const box = $('#subscription-box');
+  box.hidden = !box.hidden;
+  $('#subscription-help').hidden = box.hidden;
+  if (!box.hidden) box.select();
+});
+
+// 相手の端末で登録した購読情報を、LINE や AirDrop で管理者に渡せるようにする。
+$('#share-subscription').addEventListener('click', async () => {
+  const text = $('#subscription-box').value;
+  if (!text) return;
+  try {
+    await navigator.share({ title: 'ウルトラマン情報 購読情報', text });
+  } catch {
+    /* 共有をやめた場合は何もしない */
+  }
+});
+
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
+
+load();

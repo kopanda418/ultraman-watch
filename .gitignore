@@ -1,0 +1,7 @@
+node_modules/
+.env
+.env.*
+*.log
+
+# 公開リポジトリに含めない内部メモ（他プロジェクトとの申し送り等）
+internal/

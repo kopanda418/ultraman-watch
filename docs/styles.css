@@ -1,0 +1,193 @@
+:root {
+  --ink: #14161F;
+  --paper: #FAF9F6;
+  --silver: #8D93A1;
+  --hairline: #DCDAD3;
+  --card: #FFFFFF;
+  --timer-idle: #2E6FD8;
+  --timer-alert: #D8403A;
+  --pick: #C8912B;
+  --fg: var(--ink);
+  --bg: var(--paper);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --paper: #14161F;
+    --ink: #ECEBE6;
+    --card: #1D202B;
+    --hairline: #2C3040;
+    --silver: #7F8698;
+    --fg: var(--ink);
+    --bg: var(--paper);
+  }
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  padding: 0 0 3rem;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: 'Zen Kaku Gothic New', system-ui, sans-serif;
+  font-size: 16px;
+  line-height: 1.7;
+  -webkit-text-size-adjust: 100%;
+}
+
+/* ── ヘッダー ──────────────────────────────── */
+.masthead {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  padding: calc(env(safe-area-inset-top) + 1.1rem) 1.1rem 1rem;
+  border-bottom: 1px solid var(--hairline);
+}
+
+.masthead h1 {
+  font-family: 'Zen Antique', serif;
+  font-size: 1.4rem;
+  font-weight: 400;
+  letter-spacing: 0.04em;
+  margin: 0;
+}
+
+.stamp {
+  margin: 0.1rem 0 0;
+  font-size: 0.78rem;
+  color: var(--silver);
+  font-variant-numeric: tabular-nums;
+}
+
+/* カラータイマー: 新着があるときだけ赤く点滅する */
+.timer {
+  flex: none;
+  width: 30px; height: 30px;
+  border-radius: 50%;
+  border: 2px solid var(--silver);
+  display: grid;
+  place-items: center;
+}
+.timer-core {
+  width: 15px; height: 15px;
+  border-radius: 50%;
+  background: var(--timer-idle);
+  transition: background 0.4s;
+}
+.timer.is-alert .timer-core { background: var(--timer-alert); }
+
+@media (prefers-reduced-motion: no-preference) {
+  .timer.is-alert .timer-core { animation: blink 1.4s ease-in-out infinite; }
+  @keyframes blink { 50% { opacity: 0.25; } }
+}
+
+/* ── タブ ────────────────────────────────── */
+.tabs {
+  display: flex;
+  gap: 0.4rem;
+  padding: 0.8rem 1.1rem 0;
+  overflow-x: auto;
+}
+.tab {
+  flex: none;
+  background: transparent;
+  border: 1px solid var(--hairline);
+  border-radius: 999px;
+  color: var(--silver);
+  font: inherit;
+  font-size: 0.85rem;
+  padding: 0.35rem 0.9rem;
+  cursor: pointer;
+}
+.tab.is-active { border-color: var(--fg); color: var(--fg); font-weight: 500; }
+.tab:focus-visible { outline: 2px solid var(--timer-idle); outline-offset: 2px; }
+.tally { font-variant-numeric: tabular-nums; opacity: 0.7; }
+
+/* ── 一覧 ────────────────────────────────── */
+.list { padding: 1rem 1.1rem 0; display: grid; gap: 0.7rem; }
+
+.card {
+  background: var(--card);
+  border: 1px solid var(--hairline);
+  border-radius: 12px;
+  padding: 0.9rem 1rem;
+}
+
+.card h3 { margin: 0 0 0.4rem; font-size: 1rem; font-weight: 500; line-height: 1.5; }
+.card h3 a { color: inherit; text-decoration: none; }
+.card h3 a:hover { text-decoration: underline; }
+
+.card p { margin: 0 0 0.5rem; font-size: 0.85rem; color: var(--silver); }
+
+.meta {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem;
+  font-size: 0.75rem; color: var(--silver);
+  font-variant-numeric: tabular-nums;
+}
+
+.badge {
+  border: 1px solid currentColor;
+  border-radius: 4px;
+  padding: 0 0.35rem;
+  font-size: 0.7rem;
+}
+.badge-kanto { color: var(--timer-alert); }
+
+.card-foot { display: flex; gap: 0.5rem; margin-top: 0.7rem; }
+
+.btn {
+  background: var(--fg);
+  color: var(--bg);
+  border: none;
+  border-radius: 8px;
+  font: inherit;
+  font-size: 0.85rem;
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+}
+.btn-quiet { background: transparent; color: var(--fg); border: 1px solid var(--hairline); }
+.btn:focus-visible { outline: 2px solid var(--timer-idle); outline-offset: 2px; }
+.btn[aria-pressed='true'] { background: var(--pick); color: #14161F; }
+
+.empty {
+  border: 1px dashed var(--hairline);
+  border-radius: 12px;
+  padding: 2rem 1rem;
+  text-align: center;
+  color: var(--silver);
+  font-size: 0.9rem;
+}
+
+/* ── 設定 ────────────────────────────────── */
+.settings { padding: 2rem 1.1rem 0; border-top: 1px solid var(--hairline); margin-top: 2rem; }
+.settings h2 { font-family: 'Zen Antique', serif; font-size: 1rem; font-weight: 400; margin: 1.4rem 0 0.4rem; }
+.settings h2:first-child { margin-top: 0; }
+.note { font-size: 0.8rem; color: var(--silver); margin: 0 0 0.7rem; }
+.subscription {
+  width: 100%;
+  font-family: ui-monospace, monospace;
+  font-size: 0.7rem;
+  border: 1px solid var(--hairline);
+  border-radius: 8px;
+  background: var(--card);
+  color: var(--fg);
+  padding: 0.6rem;
+  margin-top: 0.6rem;
+}
+
+.sync { padding: 0.6rem 1.1rem 0; margin: 0; }
+
+.field {
+  display: block;
+  width: 100%;
+  font: inherit;
+  font-size: 0.9rem;
+  padding: 0.55rem 0.7rem;
+  margin-bottom: 0.5rem;
+  border: 1px solid var(--hairline);
+  border-radius: 8px;
+  background: var(--card);
+  color: var(--fg);
+}
+.field:focus-visible { outline: 2px solid var(--timer-idle); outline-offset: 1px; }
