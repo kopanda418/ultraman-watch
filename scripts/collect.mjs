@@ -90,6 +90,80 @@ async function fetchHtml(src) {
   return out;
 }
 
+// ── 円谷イマジネーション ──────────────────────────────────
+// Next.js の App Router 製で、一覧は DOM に出てこない。ただしサーバー側で
+// 描画したデータが self.__next_f.push([1,"…"]) の中に JSON のまま入っている。
+// 断片を全部つないでから、記事一覧の配列だけを切り出す。
+const IMAGINATION_ORIGIN = 'https://imagination.m-78.jp';
+// 一覧には動画カテゴリなど別の "list" も混ざるので、記事側だけを狙う目印。
+const IMAGINATION_LIST = '"list":[{"is_series"';
+
+// 対応する括弧まで数えて配列を切り出す。文字列の中の括弧は数えない。
+function sliceJsonArray(text, marker) {
+  const at = text.indexOf(marker);
+  if (at === -1) return null;
+  const start = text.indexOf('[', at);
+  let depth = 0;
+  let inString = false;
+  let escaped = false;
+
+  for (let i = start; i < text.length; i += 1) {
+    const c = text[i];
+    if (inString) {
+      if (escaped) escaped = false;
+      else if (c === '\\') escaped = true;
+      else if (c === '"') inString = false;
+      continue;
+    }
+    if (c === '"') inString = true;
+    else if (c === '[') depth += 1;
+    else if (c === ']') {
+      depth -= 1;
+      if (depth === 0) return text.slice(start, i + 1);
+    }
+  }
+  return null;
+}
+
+// 「2026/07/17 18:00:00」（日本時間）を ISO 文字列に直す
+function jstToIso(value) {
+  const m = /^(\d{4})\/(\d{2})\/(\d{2})[ T](\d{2}):(\d{2}):(\d{2})/.exec(value ?? '');
+  if (!m) return null;
+  const [y, mo, d, h, mi, s] = m.slice(1).map(Number);
+  return new Date(Date.UTC(y, mo - 1, d, h - 9, mi, s)).toISOString();
+}
+
+async function fetchImagination(src) {
+  const res = await fetch(src.url, { headers: { 'User-Agent': UA } });
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  const html = await res.text();
+
+  let payload = '';
+  for (const m of html.matchAll(/self\.__next_f\.push\(\[1,("(?:[^"\\]|\\.)*")\]\)/g)) {
+    try {
+      payload += JSON.parse(m[1]);
+    } catch {
+      // 壊れた断片は捨てて続ける
+    }
+  }
+
+  const raw = sliceJsonArray(payload, IMAGINATION_LIST);
+  if (!raw) throw new Error('記事一覧が見つからない（ページの作りが変わった可能性）');
+
+  return JSON.parse(raw)
+    .filter((it) => it?.code && it?.name)
+    .map((it) => ({
+      url: `${IMAGINATION_ORIGIN}/contents/${it.code}`,
+      title: it.name,
+      summary: '',
+      publishedAt: jstToIso(it.display_start_datetime),
+      publisherHost: null,
+      sourceId: src.id,
+      sourceName: src.name,
+      category: src.category,
+    }));
+}
+
 async function fetchRakuten() {
   if (!RAKUTEN.enabled) return [];
   const endpoint = new URL('https://app.rakuten.co.jp/services/api/IchibaItem/Search/20220601');
@@ -118,7 +192,8 @@ async function collectAll() {
   const raw = [];
   for (const src of SOURCES) {
     try {
-      const got = src.kind === 'rss' ? await fetchRss(src) : await fetchHtml(src);
+      const fetcher = { rss: fetchRss, imagination: fetchImagination }[src.kind] ?? fetchHtml;
+      const got = await fetcher(src);
       console.log(`✓ ${src.name}: ${got.length} 件`);
       raw.push(...got);
     } catch (err) {

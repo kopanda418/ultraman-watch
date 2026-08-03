@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-08-03T14:41:13.535Z",
+  "generatedAt": "2026-08-03T14:52:57.988Z",
   "sources": [
     {
       "name": "円谷ステーション",
@@ -10,6 +10,16 @@
       "name": "円谷ステーション イベント",
       "category": "official",
       "url": "https://m-78.jp/event/feed/"
+    },
+    {
+      "name": "円谷イマジネーション（イベント情報）",
+      "category": "official",
+      "url": "https://imagination.m-78.jp/search/news/news_1"
+    },
+    {
+      "name": "円谷イマジネーション（グッズ情報）",
+      "category": "sale",
+      "url": "https://imagination.m-78.jp/search/news/news_4"
     },
     {
       "name": "ニュース検索（イベント）",

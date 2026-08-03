@@ -1,6 +1,7 @@
 // 収集元の定義。
 // kind: 'rss'  … RSS/Atom をそのまま読む（最も安定。可能な限りこちらを使う）
 // kind: 'html' … CSS セレクタで一覧をパースする（サイト改修で壊れるので要メンテ）
+// kind: 'imagination' … 円谷イマジネーション専用。下の定義のコメントを参照
 //
 // 新しい収集元を足すときは、まず対象サイトに RSS がないか確認してください。
 // WordPress 系なら <トップURL>/feed/ が生きていることが多いです。
@@ -26,6 +27,26 @@ export const SOURCES = [
     url: 'https://m-78.jp/event/feed/',
     // 実地確認済み: /event/ 配下の専用 RSS が生きている（2026-08-03）。
     // html セレクタ版は地域・カテゴリ・日付が区切りなく連結されタイトルが壊れるため廃止した。
+  },
+  // 円谷イマジネーション（公式の配信サービス）。RSS は無い。
+  // 一覧は Next.js がサーバー側で描画したデータとして HTML に埋まっているので、
+  // そこから拾う（collect.mjs の fetchImagination）。DOM には出てこないため
+  // セレクタ方式は使えない。サイト改修で壊れる作りなので、ログで 0 件が続いたら疑うこと。
+  // 円谷ステーションと内容が重なるが、重複は既存の重複判定（URL・タイトル・
+  // 類似度）で潰れる。SOURCES の順で先に来たほうが残るので、公式サイトを上に置く。
+  {
+    id: 'imagination-event',
+    name: '円谷イマジネーション（イベント情報）',
+    category: 'official',
+    kind: 'imagination',
+    url: 'https://imagination.m-78.jp/search/news/news_1',
+  },
+  {
+    id: 'imagination-goods',
+    name: '円谷イマジネーション（グッズ情報）',
+    category: 'sale',
+    kind: 'imagination',
+    url: 'https://imagination.m-78.jp/search/news/news_4',
   },
   // 「ウルトラマン カードゲーム 大会情報」は削除した。
   // https://ultraman-cardgame.com/page/jp/tournament/tournament-list は Nuxt 製 SPA で、
