@@ -90,25 +90,64 @@ export function detectRegion(text) {
   return { prefectures, isKanto: prefectures.some((p) => KANTO.includes(p)) };
 }
 
-// 開催日らしき文字列を拾う。見つからなければ null。
-export function detectEventDate(text) {
-  const patterns = [
-    /(\d{4})年\s*(\d{1,2})月\s*(\d{1,2})日/,
-    /(\d{4})[\/.-](\d{1,2})[\/.-](\d{1,2})/,
-  ];
-  for (const re of patterns) {
-    const m = text.match(re);
-    if (m) {
-      const [, y, mo, d] = m;
-      return `${y}-${String(mo).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+const pad = (n) => String(n).padStart(2, '0');
+
+// 「YYYY年M月D日」「YYYY/M/D」「M月D日」を出現順に拾う。
+// 「2026年6月5日(金)〜11月30日(月)」のように終了側の年が省略されることが多いため、
+// 年が無い日付は直前に出た年を引き継ぐ。月が戻るときだけ年跨ぎとみなす。
+const DATE_RE = /(\d{4})年\s*(\d{1,2})月\s*(\d{1,2})日|(\d{4})[/.-](\d{1,2})[/.-](\d{1,2})|(\d{1,2})月\s*(\d{1,2})日/g;
+
+export function detectEventPeriod(text, fallbackYear = new Date().getFullYear()) {
+  const dates = [];
+  let prevYear = null;
+  let prevMonth = null;
+
+  for (const m of text.matchAll(DATE_RE)) {
+    let year;
+    let month;
+    let day;
+    if (m[1]) [year, month, day] = [Number(m[1]), Number(m[2]), Number(m[3])];
+    else if (m[4]) [year, month, day] = [Number(m[4]), Number(m[5]), Number(m[6])];
+    else {
+      month = Number(m[7]);
+      day = Number(m[8]);
+      year = prevYear ?? fallbackYear;
+      // 「12月20日〜1月10日」のような年跨ぎ
+      if (prevMonth !== null && month < prevMonth) year += 1;
     }
+    if (month < 1 || month > 12 || day < 1 || day > 31) continue;
+    dates.push(`${year}-${pad(month)}-${pad(day)}`);
+    prevYear = year;
+    prevMonth = month;
   }
-  const md = text.match(/(\d{1,2})月\s*(\d{1,2})日/);
-  if (md) {
-    const year = new Date().getFullYear();
-    return `${year}-${String(md[1]).padStart(2, '0')}-${String(md[2]).padStart(2, '0')}`;
+
+  if (dates.length === 0) return { start: null, end: null };
+  const sorted = [...dates].sort();
+  const start = dates[0];
+  const end = sorted[sorted.length - 1];
+  return { start, end: end === start ? null : end };
+}
+
+// 開催日（開始日）らしき文字列を拾う。見つからなければ null。
+export function detectEventDate(text) {
+  return detectEventPeriod(text).start;
+}
+
+// 終わったイベント・古すぎる記事かどうか。収集の時点で落とすのに使う。
+// ・開催日が分かる → 終了日（無ければ開始日）が今日より前なら終了済み
+// ・開催日が分からない → 記事の公開日が1年以上前なら、イベントも終わったとみなす
+// 公開日すら無いものは判断材料が無いので残す（消しすぎない側に倒す）。
+const STALE_ARTICLE_DAYS = 365;
+
+export function isStale(item, now = new Date()) {
+  // Actions は UTC で動くが、対象は日本のイベントなので JST の日付で判定する
+  const today = new Date(now.getTime() + 9 * 3600_000).toISOString().slice(0, 10);
+  const lastDay = item.eventEndDate ?? item.eventDate;
+  if (lastDay) return lastDay < today;
+  if (item.publishedAt) {
+    return item.publishedAt < new Date(now.getTime() - STALE_ARTICLE_DAYS * 86_400_000).toISOString();
   }
-  return null;
+  return false;
 }
 
 export function normalizeItem(raw) {
@@ -120,7 +159,7 @@ export function normalizeItem(raw) {
 
   const haystack = `${title} ${raw.summary ?? ''}`;
   const region = detectRegion(haystack);
-  const eventDate = detectEventDate(haystack);
+  const { start: eventDate, end: eventEndDate } = detectEventPeriod(haystack);
 
   return {
     id: sha1(url),
@@ -132,6 +171,7 @@ export function normalizeItem(raw) {
     category: raw.category,
     publishedAt: raw.publishedAt ?? null,
     eventDate,
+    eventEndDate,
     prefectures: region.prefectures,
     isKanto: region.isKanto,
     // 二次キー: 別媒体が同じイベントを報じたときの重複を潰す

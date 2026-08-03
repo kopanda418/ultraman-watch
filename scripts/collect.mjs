@@ -4,7 +4,15 @@ import path from 'node:path';
 import * as cheerio from 'cheerio';
 import Parser from 'rss-parser';
 import { SOURCES, RAKUTEN } from './sources.mjs';
-import { normalizeItem, sortForDisplay, similarity, detectEventDate, titleKey, sha1 } from './normalize.mjs';
+import {
+  normalizeItem,
+  sortForDisplay,
+  similarity,
+  detectEventPeriod,
+  isStale,
+  titleKey,
+  sha1,
+} from './normalize.mjs';
 
 const ROOT = path.resolve(import.meta.dirname, '..');
 const SEEN_PATH = path.join(ROOT, 'state', 'seen.json');
@@ -138,11 +146,12 @@ async function enrichMissingDates(items) {
         const text = $('body').text().replace(/\s+/g, ' ');
         const idx = text.indexOf('開催期間');
         if (idx !== -1) {
-          const found = detectEventDate(text.slice(idx, idx + 60));
-          if (found) {
-            item.eventDate = found;
+          const { start, end } = detectEventPeriod(text.slice(idx, idx + 60));
+          if (start) {
+            item.eventDate = start;
+            item.eventEndDate = end;
             // eventDate を含む altKey を作り直す（重複判定の精度を保つため）
-            item.altKey = sha1(`${titleKey(item.title)}|${found}`);
+            item.altKey = sha1(`${titleKey(item.title)}|${start}`);
           }
         }
       }
@@ -156,7 +165,14 @@ async function enrichMissingDates(items) {
 // ── 実行 ──────────────────────────────────────────────────
 const raw = await collectAll();
 const normalized = raw.map(normalizeItem).filter(Boolean);
-await enrichMissingDates(normalized);
+
+// 終わったイベント・古すぎる記事は要らない。
+// 本文を見に行く前に落としておくと、無駄な取得も減らせる。
+const candidates = normalized.filter((i) => !isStale(i));
+await enrichMissingDates(candidates);
+// 本文から開催日が分かった結果、終了済みと判明したものをもう一度落とす
+const fresh = candidates.filter((i) => !isStale(i));
+console.log(`\n収集 ${normalized.length} 件 → 対象 ${fresh.length} 件（終了済み・古い記事を除外）`);
 
 const seen = await readJson(SEEN_PATH, { ids: {}, altKeys: {}, titles: [] });
 seen.titles ??= [];
@@ -182,7 +198,7 @@ const looksDuplicate = (item) => {
   });
 };
 
-for (const item of normalized) {
+for (const item of fresh) {
   if (withinRun.has(item.id) || withinRun.has(item.altKey)) continue;
   if (seen.ids[item.id] || seen.altKeys[item.altKey]) continue;
   if (looksDuplicate(item)) continue;
@@ -198,7 +214,11 @@ for (const item of normalized) {
 // 類似判定の対象は直近 500 件までに抑える（際限なく増やさない）
 seen.titles = [...runTitles, ...seen.titles].slice(0, 500);
 
-const merged = sortForDisplay([...newItems, ...store.items]).slice(0, KEEP_ITEMS);
+// 既に溜まっている分も、日が過ぎたものはここで落ちていく
+const merged = sortForDisplay([...newItems, ...store.items.filter((i) => !isStale(i))]).slice(
+  0,
+  KEEP_ITEMS,
+);
 
 await mkdir(path.dirname(ITEMS_PATH), { recursive: true });
 await writeFile(
