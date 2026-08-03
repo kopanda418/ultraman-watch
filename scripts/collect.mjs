@@ -10,6 +10,7 @@ const ROOT = path.resolve(import.meta.dirname, '..');
 const SEEN_PATH = path.join(ROOT, 'state', 'seen.json');
 const LAST_RUN_PATH = path.join(ROOT, 'state', 'last-run.json');
 const ITEMS_PATH = path.join(ROOT, 'docs', 'data', 'items.json');
+const SOURCES_PATH = path.join(ROOT, 'docs', 'data', 'sources.json');
 
 const KEEP_ITEMS = 300;          // items.json に残す最大件数
 const POLITE_DELAY_MS = 3000;    // 相手サーバーへの間隔
@@ -162,7 +163,9 @@ seen.titles ??= [];
 const store = await readJson(ITEMS_PATH, { items: [] });
 
 const now = new Date().toISOString();
-const batchId = now.slice(0, 10);
+// 日付だけだと同じ日に2回収集した場合に前回分と合算されてしまうため、
+// 実行ごとに一意になるタイムスタンプそのものをバッチIDにする。
+const batchId = now;
 const newItems = [];
 const withinRun = new Set();
 
@@ -203,6 +206,14 @@ await writeFile(
   JSON.stringify({ generatedAt: now, batchId, newCount: newItems.length, items: merged }, null, 2),
 );
 await writeFile(SEEN_PATH, JSON.stringify(seen, null, 2));
+
+// 利用者が「どこから集めているか」を確認できるように、収集元一覧も書き出す。
+// sources.mjs が唯一の情報源なので、ここでは名前とURLを写すだけにする。
+const sourceList = SOURCES.map((s) => ({ name: s.name, category: s.category, url: s.url }));
+if (RAKUTEN.enabled) {
+  sourceList.push({ name: '楽天市場', category: 'sale', url: 'https://www.rakuten.co.jp/' });
+}
+await writeFile(SOURCES_PATH, JSON.stringify({ generatedAt: now, sources: sourceList }, null, 2));
 await writeFile(
   LAST_RUN_PATH,
   JSON.stringify(

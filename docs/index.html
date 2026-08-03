@@ -31,6 +31,7 @@
 </nav>
 
 <p class="note sync" id="sync-state">読み込み中</p>
+<p class="note sync" id="new-hint" hidden>「新着」は直近の収集で見つかった項目です。次の収集（通常2日ごと）が走ると入れ替わります。</p>
 
 <main id="list" class="list" aria-live="polite"></main>
 
@@ -61,6 +62,10 @@
   <h2>ピックの控え</h2>
   <p class="note">ピックは共有されていますが、手元にも控えを書き出せます。</p>
   <button class="btn btn-quiet" id="export-picks">ピックを書き出す</button>
+
+  <h2>情報源</h2>
+  <p class="note">ここに載せている情報は、以下の収集元から自動で集めています。</p>
+  <ul class="sources" id="sources-list"></ul>
 </section>
 
 <script type="module" src="app.js"></script>

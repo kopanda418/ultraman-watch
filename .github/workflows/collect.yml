@@ -38,7 +38,7 @@ jobs:
         run: |
           git config user.name  'ultraman-watch[bot]'
           git config user.email 'ultraman-watch@users.noreply.github.com'
-          git add docs/data/items.json state/seen.json state/last-run.json
+          git add docs/data/items.json docs/data/sources.json state/seen.json state/last-run.json
           if git diff --staged --quiet; then
             echo '更新なし'
           else

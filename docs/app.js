@@ -165,6 +165,7 @@ async function render() {
     : offline
       ? '同期できていません。手元の控えを表示しています。'
       : `${picks.length} 件を共有中`;
+  $('#new-hint').hidden = view !== 'new';
 
   const list = $('#list');
   list.textContent = '';
@@ -251,6 +252,24 @@ async function load() {
   await refreshSession();
   await render();
   watchPicks();
+  loadSources();
+}
+
+// ── 情報源の表示 ────────────────────────────────────────
+async function loadSources() {
+  try {
+    const res = await fetch(`data/sources.json?t=${Date.now()}`);
+    const { sources } = await res.json();
+    const list = $('#sources-list');
+    list.textContent = '';
+    for (const s of sources) {
+      const li = document.createElement('li');
+      li.innerHTML = `<a href="${s.url}" target="_blank" rel="noopener">${escapeHtml(s.name)}</a>`;
+      list.append(li);
+    }
+  } catch {
+    // 情報源一覧は補助的な表示なので、失敗しても本体の動作は止めない
+  }
 }
 
 document.querySelectorAll('.tab').forEach((tab) => {
