@@ -1,8 +1,28 @@
 {
-  "generatedAt": "2026-08-03T13:54:54.843Z",
-  "batchId": "2026-08-03T13:54:54.843Z",
-  "newCount": 0,
+  "generatedAt": "2026-08-03T22:06:34.402Z",
+  "batchId": "2026-08-03T22:06:34.402Z",
+  "newCount": 2,
   "items": [
+    {
+      "id": "9612ad265448b73c",
+      "url": "https://news.google.com/rss/articles/CBMic0FVX3lxTE9ZMGQ0SmVvWEJxNGZRb1VDN0ctb1lCaVlWRC1raklmNFlkZy1jd1d0YmdaMkZMWm55SmY4bWpnOUZCMkFGV0paLVNwdTFOTUtROFpTbnI3b2RWVlVsQk1xUndhaUFTZlZoNVFIRVFzSzRCUUU?oc=5",
+      "title": "没入型体験イベント「ウルトラマンストーリーダイブ展」始まる 横浜｜tvkNEWSアーカイブ - テレビ神奈川",
+      "summary": "没入型体験イベント「ウルトラマンストーリーダイブ展」始まる 横浜｜tvkNEWSアーカイブ テレビ神奈川",
+      "sourceId": "news-event",
+      "sourceName": "ニュース検索（イベント）",
+      "category": "news",
+      "publishedAt": "2026-07-27T08:29:01.000Z",
+      "eventDate": null,
+      "eventEndDate": null,
+      "prefectures": [
+        "神奈川"
+      ],
+      "isKanto": true,
+      "titleKey": "没入型体験イベントウルトラマンストーリーダイブ展始まる横浜tvknewsアーカイブテレビ神奈川",
+      "altKey": "3a1d4f86e1443d9f",
+      "firstSeen": "2026-08-03T22:06:34.402Z",
+      "batch": "2026-08-03T22:06:34.402Z"
+    },
     {
       "id": "4f380f87e55be0a7",
       "url": "https://news.google.com/rss/articles/CBMiREFVX3lxTE9QeU5QNWRtNHAwVlJxeDlqQ05UVWxTWHdQVGQ4U0Fjb2tQMWJIUkpjclJOdlBaY1k3Qk8wMjVLZjhHbHJU?oc=5",
@@ -797,6 +817,24 @@
       "firstSeen": "2026-08-03T06:54:53.151Z",
       "batch": "2026-08-03",
       "eventEndDate": "2026-08-30"
+    },
+    {
+      "id": "0b78ce547aa95ce0",
+      "url": "https://news.google.com/rss/articles/CBMiakFVX3lxTE80ckUxM2dRT2hDOVlyanJxTmRCeDNONHczTEhVMXJ2b2JNdHlNVERDYWdWeFhfVUlvTHdUTEdoQ045RVFWRlAtbHZ5VU01d085TG9WMGtEQWYxcm1Sd1EtWS1PaTJKSlBaZHc?oc=5",
+      "title": "「エヴァ」「仮面ライダー」「ウルトラマン」イベント開催記念フィギュアが抽選販売！それぞれ付属する特徴的なパーツ類に注目 - inside-games.jp",
+      "summary": "「エヴァ」「仮面ライダー」「ウルトラマン」イベント開催記念フィギュアが抽選販売！それぞれ付属する特徴的なパーツ類に注目 inside-games.jp",
+      "sourceId": "news-show",
+      "sourceName": "ニュース検索（ショー）",
+      "category": "news",
+      "publishedAt": "2026-01-26T08:00:00.000Z",
+      "eventDate": null,
+      "eventEndDate": null,
+      "prefectures": [],
+      "isKanto": false,
+      "titleKey": "エヴァ仮面ライダーウルトラマンイベント記念フィギュアが抽選販売それぞれ付属する特徴的なパーツ類に注目insidegamesjp",
+      "altKey": "e39a560524f2fb18",
+      "firstSeen": "2026-08-03T22:06:34.402Z",
+      "batch": "2026-08-03T22:06:34.402Z"
     },
     {
       "id": "8918e311ccabc3f4",
