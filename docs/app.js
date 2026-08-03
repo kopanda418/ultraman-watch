@@ -67,11 +67,34 @@ const fromRow = (row) => ({
   pickedAt: row.picked_at ?? '',
 });
 
+// ── 絞り込み ────────────────────────────────────────────
+// タグを増やしたいときは TAGS に1行足すだけでよい。
+// match が真になるものだけが残る。id は保存用の識別子なので変えないこと。
+const TAGS = [
+  { id: 'kanto', label: '関東', match: (i) => i.isKanto },
+  { id: 'other', label: '関東以外', match: (i) => !i.isKanto },
+  { id: 'official', label: '公式', match: (i) => i.category === 'official' },
+  { id: 'sale', label: 'グッズ・セール', match: (i) => i.category === 'sale' },
+];
+
+const pad2 = (n) => String(n).padStart(2, '0');
+// 端末のローカル日付。toISOString() は UTC になり日本時間とずれるので使わない。
+const localDate = (d) => `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
+const daysFromNow = (n) => localDate(new Date(Date.now() + n * 86_400_000));
+
+const DATE_FILTERS = [
+  { id: 'all', label: 'すべての日程', match: () => true },
+  { id: 'soon', label: '3か月以内', match: (i) => i.eventDate && i.eventDate <= daysFromNow(90) },
+  { id: 'dated', label: '日程が分かるもの', match: (i) => Boolean(i.eventDate) },
+];
+
 // ── 状態 ────────────────────────────────────────────────
 let store = { items: [], batchId: null, generatedAt: null };
 let pickIds = new Set();
 let view = 'new';
 let session = null;
+let activeTag = null; // null は「すべて」
+let activeDate = 'all';
 
 const displayName = () => localStorage.getItem('display-name') || session?.user?.email || '不明';
 
@@ -104,10 +127,48 @@ async function removePick(id) {
 const escapeHtml = (s) =>
   String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
+const isFiltered = () => activeTag !== null || activeDate !== 'all';
+
+// ピックは Supabase 側に category を持たせていないので、手元の一覧から補う。
+// 一覧から消えた古いピックは補えないが、その場合はカテゴリ絞り込みに出てこないだけ。
+const withCategory = (item) =>
+  item.category ? item : { ...item, category: store.items.find((s) => s.id === item.id)?.category };
+
 function itemsFor(currentView, picks) {
-  if (currentView === 'picks') return picks;
-  if (currentView === 'all') return store.items;
-  return store.items.filter((i) => i.batch === store.batchId);
+  const base =
+    currentView === 'picks'
+      ? picks.map(withCategory)
+      : currentView === 'all'
+        ? store.items
+        : store.items.filter((i) => i.batch === store.batchId);
+
+  const tag = TAGS.find((t) => t.id === activeTag);
+  const dateFilter = DATE_FILTERS.find((d) => d.id === activeDate);
+  return base.filter((i) => (!tag || tag.match(i)) && (!dateFilter || dateFilter.match(i)));
+}
+
+// 絞り込みのチップを描く。TAGS / DATE_FILTERS を増やせばそのまま増える。
+function renderChips() {
+  const build = (container, options, active, onPick, allLabel) => {
+    container.textContent = '';
+    const entries = allLabel ? [{ id: null, label: allLabel }, ...options] : options;
+    for (const opt of entries) {
+      const btn = document.createElement('button');
+      btn.className = 'chip';
+      btn.type = 'button';
+      btn.textContent = opt.label;
+      btn.setAttribute('aria-pressed', String(opt.id === active));
+      btn.addEventListener('click', () => {
+        onPick(opt.id);
+        renderChips();
+        render();
+      });
+      container.append(btn);
+    }
+  };
+
+  build($('#tag-filters'), TAGS, activeTag, (id) => { activeTag = id; }, 'すべて');
+  build($('#date-filters'), DATE_FILTERS, activeDate, (id) => { activeDate = id; });
 }
 
 function card(item) {
@@ -174,7 +235,7 @@ async function render() {
   if (items.length === 0) {
     const empty = document.createElement('p');
     empty.className = 'empty';
-    empty.textContent = EMPTY[view];
+    empty.textContent = isFiltered() ? '絞り込みに合う情報はありませんでした。' : EMPTY[view];
     list.append(empty);
   } else {
     for (const item of items) list.append(card(item));
@@ -249,6 +310,7 @@ async function load() {
   $('#timer').classList.toggle('is-alert', newCount > 0);
 
   $('#display-name').value = localStorage.getItem('display-name') ?? '';
+  renderChips();
   await refreshSession();
   await render();
   watchPicks();

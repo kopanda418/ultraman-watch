@@ -104,6 +104,23 @@ body {
 .tab:focus-visible { outline: 2px solid var(--timer-idle); outline-offset: 2px; }
 .tally { font-variant-numeric: tabular-nums; opacity: 0.7; }
 
+/* ── 絞り込み ────────────────────────────── */
+.filters { padding: 0.6rem 1.1rem 0; display: grid; gap: 0.35rem; }
+.chips { display: flex; gap: 0.35rem; overflow-x: auto; }
+.chip {
+  flex: none;
+  background: transparent;
+  border: 1px solid var(--hairline);
+  border-radius: 999px;
+  color: var(--silver);
+  font: inherit;
+  font-size: 0.75rem;
+  padding: 0.22rem 0.7rem;
+  cursor: pointer;
+}
+.chip[aria-pressed='true'] { border-color: var(--fg); color: var(--fg); font-weight: 500; }
+.chip:focus-visible { outline: 2px solid var(--timer-idle); outline-offset: 2px; }
+
 /* ── 一覧 ────────────────────────────────── */
 .list { padding: 1rem 1.1rem 0; display: grid; gap: 0.7rem; }
 
