@@ -291,7 +291,9 @@ const withListData = (item) => {
   return found ? { ...item, category: found.category, batch: found.batch } : item;
 };
 
-function itemsFor(currentView, picks, archives) {
+// 絞り込みまで済ませた一覧。タブの件数も表示する中身もここから採るので、
+// 「見えている件数」と「タブに出る数字」が食い違わない。
+function filteredFor(currentView, picks, archives) {
   const base =
     currentView === 'picks'
       ? picks.map(withListData)
@@ -305,10 +307,13 @@ function itemsFor(currentView, picks, archives) {
     DATE_FILTERS.find((d) => d.id === activeDate),
     READ_FILTERS.find((r) => r.id === activeRead),
   ].filter(Boolean);
-  // 手直しした日付を当ててから絞り込む。並びも日付で変わるので並べ直す。
-  const edited = base.map(withEdit);
-  return sortForDisplay(edited.filter((i) => conditions.every((c) => c.match(i))));
+  // 手直しした日付を当ててから絞り込む
+  return base.map(withEdit).filter((i) => conditions.every((c) => c.match(i)));
 }
+
+// 並びは手直しした日付で変わるので、表示の直前に並べ直す
+const itemsFor = (currentView, picks, archives) =>
+  sortForDisplay(filteredFor(currentView, picks, archives));
 
 // 絞り込みのチップを描く。TAGS / DATE_FILTERS を増やせばそのまま増える。
 function renderChips() {
@@ -663,9 +668,12 @@ async function render() {
     for (const item of items) list.append(card(item));
   }
 
-  $('#tally-list').textContent = store.items.filter((i) => !archiveIds.has(i.id)).length;
-  $('#tally-picks').textContent = pickIds.size;
-  $('#tally-archive').textContent = archiveIds.size;
+  // タブの件数は絞り込みを通したあとの数。絞っていないときは全件と一致する。
+  // 総数のままだと、開いたタブに出てくる件数と数字が食い違う。
+  const tally = (v) => filteredFor(v, picks, archives).length;
+  $('#tally-list').textContent = tally('all');
+  $('#tally-picks').textContent = tally('picks');
+  $('#tally-archive').textContent = tally('archive');
 }
 
 // ── サインイン ──────────────────────────────────────────
