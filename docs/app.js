@@ -103,6 +103,31 @@ const DATE_FILTERS = [
   { id: 'dated', label: '日程が分かるもの', match: (i) => Boolean(i.eventDate) },
 ];
 
+// ── 未読・既読 ──────────────────────────────────────────
+// 元記事へ一度でも飛べば既読。既定は未読。
+// これは端末ごとの状態で、2人の間では共有しない。相手が読んだかどうかは
+// こちらが読むかどうかの判断に関係しないため（ピックやアーカイブとは違う）。
+const READ_KEY = 'read-ids';
+const READ_KEEP = 2000; // 際限なく溜めない。古いものから捨てる
+let readIds = new Set();
+
+function loadRead() {
+  try {
+    readIds = new Set(JSON.parse(localStorage.getItem(READ_KEY) ?? '[]'));
+  } catch {
+    readIds = new Set(); // 壊れていたら未読からやり直す
+  }
+}
+
+// Set は入れた順に並ぶので、末尾から数えれば新しいものが残る
+const saveRead = () => localStorage.setItem(READ_KEY, JSON.stringify([...readIds].slice(-READ_KEEP)));
+
+const READ_FILTERS = [
+  { id: 'all', label: 'すべて', match: () => true },
+  { id: 'unread', label: '未読', match: (i) => !readIds.has(i.id) },
+  { id: 'read', label: '既読', match: (i) => readIds.has(i.id) },
+];
+
 // ── 状態 ────────────────────────────────────────────────
 let store = { items: [], batchId: null, generatedAt: null };
 let pickIds = new Set();
@@ -111,6 +136,7 @@ let view = 'all';
 let session = null;
 let activeTag = null; // null は「すべて」
 let activeDate = 'all';
+let activeRead = 'all';
 
 const displayName = () => localStorage.getItem('display-name') || session?.user?.email || '不明';
 
@@ -146,7 +172,7 @@ async function removeFrom(name, id) {
 const escapeHtml = (s) =>
   String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
-const isFiltered = () => activeTag !== null || activeDate !== 'all';
+const isFiltered = () => activeTag !== null || activeDate !== 'all' || activeRead !== 'all';
 
 // ピック・アーカイブは Supabase 側に category や batch を持たせていないので、
 // 手元の一覧から補う。一覧から消えた古いものは補えないが、
@@ -165,9 +191,12 @@ function itemsFor(currentView, picks, archives) {
         // 一覧はアーカイブしたものを除く。戻せばまたここに現れる。
         : store.items.filter((i) => !archiveIds.has(i.id));
 
-  const tag = TAGS.find((t) => t.id === activeTag);
-  const dateFilter = DATE_FILTERS.find((d) => d.id === activeDate);
-  return base.filter((i) => (!tag || tag.match(i)) && (!dateFilter || dateFilter.match(i)));
+  const conditions = [
+    TAGS.find((t) => t.id === activeTag),
+    DATE_FILTERS.find((d) => d.id === activeDate),
+    READ_FILTERS.find((r) => r.id === activeRead),
+  ].filter(Boolean);
+  return base.filter((i) => conditions.every((c) => c.match(i)));
 }
 
 // 絞り込みのチップを描く。TAGS / DATE_FILTERS を増やせばそのまま増える。
@@ -192,13 +221,15 @@ function renderChips() {
 
   build($('#tag-filters'), TAGS, activeTag, (id) => { activeTag = id; }, 'すべて');
   build($('#date-filters'), DATE_FILTERS, activeDate, (id) => { activeDate = id; });
+  build($('#read-filters'), READ_FILTERS, activeRead, (id) => { activeRead = id; });
   renderFilterToggle();
 }
 
 // たたんでいる間も、絞り込みが効いていることが分かるようにする。
 // 条件名まで出すとボタンが伸びてタブを押し潰すので、件数だけを添える。
 function renderFilterToggle() {
-  const count = (activeTag === null ? 0 : 1) + (activeDate === 'all' ? 0 : 1);
+  const count =
+    (activeTag === null ? 0 : 1) + (activeDate === 'all' ? 0 : 1) + (activeRead === 'all' ? 0 : 1);
 
   $('#filter-tally').textContent = count > 0 ? String(count) : '';
   $('#filter-toggle').classList.toggle('is-on', count > 0);
@@ -217,6 +248,7 @@ $('#filter-toggle').addEventListener('click', () => {
 $('#filter-clear').addEventListener('click', () => {
   activeTag = null;
   activeDate = 'all';
+  activeRead = 'all';
   setFiltersOpen(false);
   renderChips();
   render();
@@ -243,6 +275,7 @@ function card(item) {
         <span>${escapeHtml(item.sourceName)}</span>
         <span>${when}</span>
         <span>${escapeHtml(where)}</span>
+        ${readIds.has(item.id) ? '' : '<span class="badge badge-unread">未読</span>'}
         ${isNew ? '<span class="badge badge-new">新着</span>' : ''}
         ${item.isKanto ? '<span class="badge badge-kanto">関東</span>' : ''}
         ${item.savedBy ? `<span class="badge">${escapeHtml(item.savedBy)}が${view === 'archive' ? 'アーカイブ' : 'ピック'}</span>` : ''}
@@ -273,6 +306,23 @@ function card(item) {
   bind('.pick', 'picks', pickIds, 'ピック');
   bind('.archive', 'archives', archiveIds, 'アーカイブ');
   bindSwipe(el);
+
+  // 元記事へ飛んだら既読にする。タイトルと「元記事を開く」のどちらからでもよい。
+  // ここで再描画すると、読みに行った瞬間にカードが消えることがある（未読で
+  // 絞り込んでいる場合）ので、バッジだけその場で外す。並びは次の描画で揃う。
+  if (!readIds.has(item.id)) {
+    const markRead = () => {
+      if (readIds.has(item.id)) return;
+      readIds.add(item.id);
+      saveRead();
+      el.querySelector('.badge-unread')?.remove();
+    };
+    for (const a of el.querySelectorAll('.card-face a[href]')) {
+      a.addEventListener('click', markRead);
+      // 長押しから「新規タブで開く」を選んだ場合など、click が来ない経路の保険
+      a.addEventListener('auxclick', markRead);
+    }
+  }
 
   return el;
 }
@@ -457,6 +507,7 @@ async function load() {
   $('#timer').classList.toggle('is-alert', newCount > 0);
 
   $('#display-name').value = localStorage.getItem('display-name') ?? '';
+  loadRead();
   renderChips();
   await refreshSession();
   await render();

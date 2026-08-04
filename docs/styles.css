@@ -247,6 +247,8 @@ body {
 .badge-kanto { color: var(--timer-alert); }
 /* 「新着」はタブから絞り込みに移したので、カード側でも見て分かるようにする */
 .badge-new { color: var(--timer-idle); }
+/* 未読のときだけ出す。既読には何も出さない（全件に付くと目印にならないため） */
+.badge-unread { color: var(--pick); }
 
 /* ボタンが3つになったので、横に入りきらない端末では折り返す */
 .card-foot { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.7rem; }
