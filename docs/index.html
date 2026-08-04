@@ -12,7 +12,13 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Zen+Antique&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles.css">
+<!--
+  styles.css / app.js の ?v= は、キャッシュを確実に切り替えるための版番号。
+  この2ファイルを直したら必ずこの数字も上げること（日付でよい）。
+  上げ忘れると「新しい index.html に古い styles.css が当たる」状態になり、
+  ヘッダーが横に割れるなど、見た目が派手に崩れる。実際に起きた（2026-08-04）。
+-->
+<link rel="stylesheet" href="styles.css?v=20260804">
 </head>
 <body>
 
@@ -84,6 +90,6 @@
   <ul class="sources" id="sources-list"></ul>
 </section>
 
-<script type="module" src="app.js"></script>
+<script type="module" src="app.js?v=20260804"></script>
 </body>
 </html>
