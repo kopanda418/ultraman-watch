@@ -83,3 +83,19 @@ create policy "家族のみ削除できる"
 
 -- 相手がアーカイブした瞬間に自分の画面へ反映させる
 alter publication supabase_realtime add table public.archives;
+
+-- ── 収集スクリプトへ渡す窓 ──────────────────────────────
+-- 収集スクリプト（GitHub Actions）は、保持上限を超えた分をアーカイブ済みから
+-- 先に落とすために「どの記事がアーカイブされたか」だけを知る必要がある。
+-- そのためだけの読み取り専用のビュー。記事IDしか返さないので、
+-- 表示名も記事の中身も外へ出ない。書き込みも一切できない。
+--
+-- security_invoker = false（既定）なので、ビューは所有者の権限で動く。
+-- おかげで archives 本体の行レベルセキュリティは2人に閉じたまま据え置ける。
+-- この2点のどちらかを崩すと、アーカイブの中身まで公開されるので注意。
+drop view if exists public.archived_ids;
+create view public.archived_ids with (security_invoker = false) as
+  select id from public.archives;
+
+-- anon キーは公開されているため、ここから読めるのは意味を持たない ID の列だけ。
+grant select on public.archived_ids to anon;

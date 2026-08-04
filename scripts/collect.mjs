@@ -291,6 +291,29 @@ async function collectAll() {
   return raw;
 }
 
+// ── アーカイブの取得 ──────────────────────────────────────
+// PWA で「アーカイブ」した記事は、保持上限を超えたときに真っ先に落とす。
+// どれがアーカイブされたかは Supabase の archived_ids ビューから読む。
+// URL と anon キーは docs/app.js と同じ、公開される前提の値。記事IDしか
+// 返さない読み取り専用のビューなので秘密の鍵は要らない（DECISIONS.md 参照）。
+const SUPABASE_URL = process.env.SUPABASE_URL ?? 'https://ijtywsqdudtqfkliwigo.supabase.co';
+const SUPABASE_ANON_KEY =
+  process.env.SUPABASE_ANON_KEY ?? 'sb_publishable_IXW1ziW7LmN46R8YZznXmw_bY_4Jd6O';
+
+async function fetchArchivedIds() {
+  try {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/archived_ids?select=id`, {
+      headers: { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${SUPABASE_ANON_KEY}` },
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    return new Set((await res.json()).map((r) => r.id));
+  } catch (err) {
+    // 読めなくても収集は止めない。落とす順番がこれまで通りになるだけ。
+    console.warn(`✗ アーカイブの取得: ${err.message}`);
+    return new Set();
+  }
+}
+
 const readJson = async (p, fallback) => {
   try {
     return JSON.parse(await readFile(p, 'utf8'));
@@ -498,7 +521,25 @@ const carried = store.items
   // 日が過ぎたものはここで落ちていく（上で日付が変わったものも含めて判定する）
   .filter((i) => !isStale(i));
 
-const merged = sortForDisplay([...newItems, ...carried]).slice(0, KEEP_ITEMS);
+// 保持上限を超えた分は、アーカイブしたものから先に落とす。
+// 「もう見た・興味がない」と本人が判断したものなので、残す価値が一番低い。
+// どちらの組の中でも落とす順番はこれまでと同じで、並び順の末尾からになる。
+// 最後にもう一度全体の並び順に戻すのは、アーカイブを解除したときに
+// その記事が本来の位置へ戻るようにするため。
+const ordered = sortForDisplay([...newItems, ...carried]);
+const archivedIds = await fetchArchivedIds();
+const shelved = ordered.filter((i) => archivedIds.has(i.id));
+const rest = ordered.filter((i) => !archivedIds.has(i.id));
+const room = Math.max(KEEP_ITEMS - rest.length, 0);
+const kept = new Set([...rest.slice(0, KEEP_ITEMS), ...shelved.slice(0, room)].map((i) => i.id));
+const merged = ordered.filter((i) => kept.has(i.id));
+
+if (ordered.length > KEEP_ITEMS) {
+  console.log(
+    `保持上限で ${ordered.length - merged.length} 件を除外` +
+      `（うちアーカイブ済み ${shelved.length - Math.min(shelved.length, room)} 件）`,
+  );
+}
 
 await mkdir(path.dirname(ITEMS_PATH), { recursive: true });
 await writeFile(
