@@ -26,7 +26,10 @@ const LAST_RUN_PATH = path.join(ROOT, 'state', 'last-run.json');
 const ITEMS_PATH = path.join(ROOT, 'docs', 'data', 'items.json');
 const SOURCES_PATH = path.join(ROOT, 'docs', 'data', 'sources.json');
 
-const KEEP_ITEMS = 300;          // items.json に残す最大件数
+// items.json に残す最大件数。溢れた分は並び順の末尾（関東外・日程未定・古い順）
+// から落ち、seen.json には既報として残るため戻ってこない。
+// 上限の根拠は DECISIONS.md「保持は 300 件まで」を参照。
+const KEEP_ITEMS = 300;
 const POLITE_DELAY_MS = 3000;    // 相手サーバーへの間隔
 const UA = 'ultraman-watch/1.0 (personal event tracker)';
 
