@@ -47,7 +47,15 @@ create policy "家族のみ削除できる"
   on public.picks for delete to authenticated using (public.is_ultraman_watch_family());
 
 -- 相手がピックした瞬間に自分の画面へ反映させる（任意）
-alter publication supabase_realtime add table public.picks;
+--
+-- supabase_realtime はプロジェクト全体で共有している設定なので、扱いに注意する。
+-- 表を「足す」だけで他アプリの分を消しはしないため影響は無いが、
+-- 既に入っている表をもう一度足すとエラーになり、そこで実行が止まる。
+-- 貼り直せるように、重複だけ握りつぶす。
+do $$ begin
+  alter publication supabase_realtime add table public.picks;
+exception when duplicate_object then null;
+end $$;
 
 -- ── アーカイブ ──────────────────────────────────────────
 -- 「もう見た・興味がない」として一覧から外した記事。2人で共有する。
@@ -81,8 +89,11 @@ drop policy if exists "家族のみ削除できる" on public.archives;
 create policy "家族のみ削除できる"
   on public.archives for delete to authenticated using (public.is_ultraman_watch_family());
 
--- 相手がアーカイブした瞬間に自分の画面へ反映させる
-alter publication supabase_realtime add table public.archives;
+-- 相手がアーカイブした瞬間に自分の画面へ反映させる（重複時の扱いは picks と同じ）
+do $$ begin
+  alter publication supabase_realtime add table public.archives;
+exception when duplicate_object then null;
+end $$;
 
 -- ── 開催日の手直し ──────────────────────────────────────
 -- 自動で読み取った開催日が違う・取れなかったときに、利用者が入れ直した値。
@@ -114,7 +125,10 @@ drop policy if exists "家族のみ削除できる" on public.event_dates;
 create policy "家族のみ削除できる"
   on public.event_dates for delete to authenticated using (public.is_ultraman_watch_family());
 
-alter publication supabase_realtime add table public.event_dates;
+do $$ begin
+  alter publication supabase_realtime add table public.event_dates;
+exception when duplicate_object then null;
+end $$;
 
 -- ── 収集スクリプトへ渡す窓 ──────────────────────────────
 -- 収集スクリプト（GitHub Actions）は、保持上限を超えた分をアーカイブ済みから
