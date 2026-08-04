@@ -95,8 +95,19 @@ const NEWS_MAX_REQUESTS = 24; // 1ソースあたりの上限。相手にも自�
 // 語が出ない見出しがあり、公式である時点で関連は保証されているため）。
 const NEWS_RELEVANT = /ウルトラ|円谷|ツブラヤ|シュワッチ|ULTRA|TSUBURAYA|M-?78/i;
 
-const looksRelevant = (raw) =>
-  NEWS_RELEVANT.test(`${raw.title ?? ''} ${raw.summary ?? ''}`.normalize('NFKC'));
+// 「＜画像4 / 10＞…」で始まるものは記事ではなく写真ページ。見出しは親記事の
+// 使い回しで中身が無いうえ、媒体が日付を打ち直すため、いつまでも「新しい記事」
+// として返ってくる。実際に 2014 年のイベント（ウルトラ有馬記念）や 2009 年の
+// お披露目の写真ページが「4日前の記事」として入ってきた（2026-08-04、9件全て
+// walkerplus.com）。when: で期間を絞っても、公開日で古さを見ても防げない。
+// 先頭の「＜」が付くものと付かないものの両方が実在するので、どちらも拾う。
+// 判定の前に NFKC で字を揃えるため、ここでは半角の < > / だけ見ればよい。
+const NEWS_JUNK = /^<?\s*画像\s*\d+\s*\/\s*\d+\s*>/;
+
+const looksRelevant = (raw) => {
+  const title = (raw.title ?? '').normalize('NFKC').trim();
+  return NEWS_RELEVANT.test(`${title} ${(raw.summary ?? '').normalize('NFKC')}`) && !NEWS_JUNK.test(title);
+};
 
 const DAY_MS = 86_400_000;
 const ymd = (ms) => new Date(ms).toISOString().slice(0, 10);
