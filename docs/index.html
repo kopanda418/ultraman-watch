@@ -18,7 +18,7 @@
   上げ忘れると「新しい index.html に古い styles.css が当たる」状態になり、
   ヘッダーが横に割れるなど、見た目が派手に崩れる。実際に起きた（2026-08-04）。
 -->
-<link rel="stylesheet" href="styles.css?v=20260805h">
+<link rel="stylesheet" href="styles.css?v=20260805i">
 </head>
 <body>
 
@@ -38,12 +38,11 @@
       <button class="tab" role="tab" data-view="picks" aria-selected="false">ピック <span class="tally" id="tally-picks">0</span></button>
       <button class="tab" role="tab" data-view="archive" aria-selected="false">アーカイブ <span class="tally" id="tally-archive">0</span></button>
     </nav>
-    <div class="filter-bar">
-      <button class="filter-toggle" id="filter-toggle" type="button" aria-expanded="false" aria-controls="filters">
-        絞り込み <span class="tally" id="filter-tally"></span><span class="caret" aria-hidden="true">▾</span>
-      </button>
-      <button class="filter-clear" id="filter-clear" type="button" hidden aria-label="絞り込みを解除">×</button>
-    </div>
+    <!-- 幅の余裕をタブに回すため、絞り込みはアイコンだけにしている -->
+    <button class="filter-toggle" id="filter-toggle" type="button" aria-expanded="false" aria-controls="filters" aria-label="絞り込み">
+      <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path d="M1.5 2.5h13L9.5 9v4.2l-3-1.8V9z" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/></svg>
+      <span class="tally" id="filter-tally"></span>
+    </button>
   </div>
 
   <!-- 縦幅を食わないよう、絞り込みは既定でたたんでおく -->
@@ -51,6 +50,9 @@
     <div class="chips" id="tag-filters" role="group" aria-label="タグで絞り込み"></div>
     <div class="chips" id="date-filters" role="group" aria-label="日程で絞り込み"></div>
     <div class="chips" id="read-filters" role="group" aria-label="未読・既読で絞り込み"></div>
+    <!-- 解除はヘッダーに置かない。「絞り込み」のすぐ隣だと、閉じるつもりで
+         押してしまう事故が実際に起きたため（BACKLOG 対応済み） -->
+    <button class="chip chip-clear" id="filter-clear" type="button" hidden>絞り込みを解除</button>
   </div>
 </header>
 
@@ -133,6 +135,6 @@
   </div>
 </section>
 
-<script type="module" src="app.js?v=20260805h"></script>
+<script type="module" src="app.js?v=20260805i"></script>
 </body>
 </html>

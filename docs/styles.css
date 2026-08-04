@@ -101,7 +101,7 @@ body {
 
 .tabs {
   display: flex;
-  gap: 0.4rem;
+  gap: 0.35rem;
   flex: 1 1 auto;
   min-width: 0;
   overflow-x: auto;
@@ -113,65 +113,60 @@ body {
   border-radius: 999px;
   color: var(--silver);
   font: inherit;
-  font-size: 0.85rem;
-  padding: 0.35rem 0.9rem;
+  font-size: 0.82rem;
+  /* 3つのタブが iPhone の幅に収まる範囲。広げるとはみ出す */
+  padding: 0.35rem 0.7rem;
   cursor: pointer;
+  white-space: nowrap;
 }
 .tab.is-active { border-color: var(--fg); color: var(--fg); font-weight: 500; }
 .tab:focus-visible { outline: 2px solid var(--timer-idle); outline-offset: 2px; }
 .tally { font-variant-numeric: tabular-nums; opacity: 0.7; }
 
 /* ── 絞り込み ────────────────────────────── */
-/* 「絞り込み」と、その隣の解除ボタンの間隔。解除は取り消せない操作なので、
-   閉じるつもりで解除してしまわないよう、指1本分の余裕を空けておく。 */
-.filter-bar { flex: none; display: flex; align-items: center; gap: 0.5rem; }
-
+/* 絞り込みはアイコンだけにして、空いた幅をタブに回す。
+   文字で「絞り込み ▾」と出していた頃はタブが 77px はみ出していた。 */
 .filter-toggle {
+  position: relative;
+  flex: none;
   display: flex;
   align-items: center;
-  gap: 0.25rem;
+  justify-content: center;
+  /* 指の当たり判定。ここを詰めると押しにくくなる */
+  min-width: 40px;
+  min-height: 40px;
   background: transparent;
   border: 1px solid var(--hairline);
   border-radius: 999px;
   color: var(--silver);
-  font: inherit;
-  font-size: 0.78rem;
-  padding: 0.28rem 0.7rem;
   cursor: pointer;
-  white-space: nowrap;
 }
 /* 絞り込みが効いている間は、たたんでいても効いていると分かるようにする。
-   枠と文字の色に加えて面でも見せる。色の変化だけだと小さくて気づきにくい。 */
+   アイコンだけなので、枠と色に加えて面も塗らないと気づけない。 */
 .filter-toggle.is-on {
   border-color: var(--fg);
   color: var(--fg);
-  font-weight: 500;
   background: color-mix(in srgb, var(--fg) 12%, transparent);
 }
-.filter-toggle .caret { font-size: 0.65rem; transition: transform 0.15s; }
-.filter-toggle[aria-expanded='true'] .caret { transform: rotate(180deg); }
-
-.filter-clear {
-  flex: none;
-  /* 絞り込みを一括解除する取り消せない操作。24px 角で隣と 4px しか離れておらず、
-     「絞り込み」を押したつもりで解除してしまう事故が起きていた。
-     見た目は控えめなまま、指の当たり判定だけ広く取る。小さくしないこと。 */
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 40px;
-  min-height: 40px;
-  background: transparent;
-  border: none;
-  color: var(--silver);
-  font: inherit;
-  font-size: 1rem;
-  line-height: 1;
-  cursor: pointer;
+/* 件数はアイコンの右上に重ねる。横に並べるとボタンの幅が伸びてしまう */
+.filter-toggle .tally {
+  position: absolute;
+  top: -2px; right: -2px;
+  min-width: 15px; height: 15px;
+  border-radius: 999px;
+  background: var(--fg);
+  color: var(--bg);
+  font-size: 0.6rem; line-height: 15px;
+  opacity: 1;
 }
+.filter-toggle .tally:empty { display: none; }
 
-.filter-toggle:focus-visible,
-.filter-clear:focus-visible { outline: 2px solid var(--timer-idle); outline-offset: 2px; }
+/* 解除はパネルの中に置く。ヘッダーで「絞り込み」の隣に置いていた頃、
+   閉じるつもりで押してしまう事故が起きた。戻さないこと。 */
+/* .filters は grid なので、指定しないと横いっぱいに伸びる */
+.chip-clear { justify-self: start; color: var(--timer-alert); border-color: currentColor; }
+
+.filter-toggle:focus-visible { outline: 2px solid var(--timer-idle); outline-offset: 2px; }
 
 .filters { display: grid; gap: 0.35rem; }
 .filters[hidden] { display: none; } /* display 指定は hidden 属性より強いので明示する */
