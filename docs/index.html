@@ -18,7 +18,7 @@
   上げ忘れると「新しい index.html に古い styles.css が当たる」状態になり、
   ヘッダーが横に割れるなど、見た目が派手に崩れる。実際に起きた（2026-08-04）。
 -->
-<link rel="stylesheet" href="styles.css?v=20260805d">
+<link rel="stylesheet" href="styles.css?v=20260805e">
 </head>
 <body>
 
@@ -29,6 +29,7 @@
       <h1>ウルトラマン情報</h1>
       <p class="stamp" id="stamp">読み込み中</p>
     </div>
+    <button class="icon-btn" id="settings-open" type="button" aria-label="設定を開く">⚙</button>
   </div>
 
   <div class="masthead-nav">
@@ -57,41 +58,52 @@
 <p class="note sync" id="new-hint" hidden>「新着」は直近の収集で見つかった項目です。次の収集（通常2日ごと）が走ると入れ替わります。</p>
 <p class="note sync" id="archive-hint" hidden>アーカイブした記事は一覧から外れます。カードの「一覧に戻す」で戻せます。</p>
 
-<main id="list" class="list" aria-live="polite"></main>
-
-<section class="settings">
+<!-- 未サインインのときだけ、一覧の手前に出す。一覧自体は誰でも見られる（DECISIONS.md） -->
+<section class="signin-panel" id="signin-panel" hidden>
   <h2>サインイン</h2>
-  <p class="note" id="account"></p>
-  <div id="signin-form">
-    <p class="note">ピックを2人で共有するにはサインインが必要です。</p>
-    <input class="field" id="email" type="email" inputmode="email" autocomplete="username" placeholder="メールアドレス">
-    <input class="field" id="password" type="password" autocomplete="current-password" placeholder="パスワード">
-    <button class="btn" id="signin">サインイン</button>
-    <p class="note" id="signin-state"></p>
-  </div>
-  <button class="btn btn-quiet" id="signout" hidden>サインアウト</button>
-
-  <h2>表示名</h2>
-  <p class="note">ピックした人としてカードに表示されます。</p>
-  <input class="field" id="display-name" type="text" placeholder="例: だい">
-
-  <h2>通知</h2>
-  <p class="note" id="push-state">ホーム画面に追加したうえで有効にしてください。</p>
-  <button class="btn" id="enable-push">通知を有効にする</button>
-  <button class="btn btn-quiet" id="show-subscription" hidden>購読情報を表示</button>
-  <button class="btn btn-quiet" id="share-subscription" hidden>購読情報を共有</button>
-  <textarea class="subscription" id="subscription-box" readonly hidden rows="6"></textarea>
-  <p class="note" hidden id="subscription-help">この内容を管理者に渡してください。Secrets の <code>PUSH_SUBSCRIPTIONS</code> に追加すると通知が届くようになります。</p>
-
-  <h2>ピックの控え</h2>
-  <p class="note">ピックは共有されていますが、手元にも控えを書き出せます。</p>
-  <button class="btn btn-quiet" id="export-picks">ピックを書き出す</button>
-
-  <h2>情報源</h2>
-  <p class="note">ここに載せている情報は、以下の収集元から自動で集めています。</p>
-  <ul class="sources" id="sources-list"></ul>
+  <p class="note">一覧はこのままでも見られます。ピックとアーカイブを2人で共有するにはサインインしてください。</p>
+  <input class="field" id="email" type="email" inputmode="email" autocomplete="username" placeholder="メールアドレス">
+  <input class="field" id="password" type="password" autocomplete="current-password" placeholder="パスワード">
+  <input class="field display-name" type="text" autocomplete="nickname" placeholder="表示名（例: だい）">
+  <button class="btn" id="signin">サインイン</button>
+  <p class="note" id="signin-state"></p>
 </section>
 
-<script type="module" src="app.js?v=20260805d"></script>
+<main id="list" class="list" aria-live="polite"></main>
+
+<!-- 設定は別画面。普段は一覧の邪魔をしないよう、丸ごと覆い隠す -->
+<section class="screen" id="settings" hidden>
+  <div class="screen-head">
+    <h2>設定</h2>
+    <button class="btn btn-quiet" id="settings-close" type="button">閉じる</button>
+  </div>
+  <div class="screen-body">
+    <h3>アカウント</h3>
+    <p class="note" id="account">サインインしていません。</p>
+    <button class="btn btn-quiet" id="signout" hidden>サインアウト</button>
+
+    <h3>表示名</h3>
+    <p class="note">ピックした人としてカードに表示されます。</p>
+    <input class="field display-name" type="text" autocomplete="nickname" placeholder="例: だい">
+
+    <h3>通知</h3>
+    <p class="note" id="push-state">ホーム画面に追加したうえで有効にしてください。</p>
+    <button class="btn" id="enable-push">通知を有効にする</button>
+    <button class="btn btn-quiet" id="show-subscription" hidden>購読情報を表示</button>
+    <button class="btn btn-quiet" id="share-subscription" hidden>購読情報を共有</button>
+    <textarea class="subscription" id="subscription-box" readonly hidden rows="6"></textarea>
+    <p class="note" hidden id="subscription-help">この内容を管理者に渡してください。Secrets の <code>PUSH_SUBSCRIPTIONS</code> に追加すると通知が届くようになります。</p>
+
+    <h3>ピックの控え</h3>
+    <p class="note">ピックは共有されていますが、手元にも控えを書き出せます。</p>
+    <button class="btn btn-quiet" id="export-picks">ピックを書き出す</button>
+
+    <h3>情報源</h3>
+    <p class="note">ここに載せている情報は、以下の収集元から自動で集めています。</p>
+    <ul class="sources" id="sources-list"></ul>
+  </div>
+</section>
+
+<script type="module" src="app.js?v=20260805e"></script>
 </body>
 </html>

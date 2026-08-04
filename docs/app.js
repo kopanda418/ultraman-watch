@@ -446,12 +446,26 @@ async function refreshSession() {
   if (!supabase) return;
   const { data } = await supabase.auth.getSession();
   session = data.session;
-  $('#signin-form').hidden = Boolean(session);
+  // 一覧は未サインインでも見られる（DECISIONS.md）。案内を一覧の手前に出すだけ。
+  $('#signin-panel').hidden = Boolean(session);
   $('#signout').hidden = !session;
-  $('#account').textContent = session ? `${displayName()} としてサインイン中` : '';
+  $('#account').textContent = session
+    ? `${displayName()} としてサインイン中`
+    : 'サインインしていません。ピックとアーカイブは共有されません。';
 }
 
+// ── 設定画面 ────────────────────────────────────────────
+const setSettingsOpen = (open) => {
+  $('#settings').hidden = !open;
+};
+$('#settings-open').addEventListener('click', () => setSettingsOpen(true));
+$('#settings-close').addEventListener('click', () => setSettingsOpen(false));
+
 $('#signin').addEventListener('click', async () => {
+  // 表示名を入れた直後にそのままボタンを押しても取りこぼさないよう、ここでも拾う
+  const typedName = $('#signin-panel .display-name').value.trim();
+  if (typedName) setDisplayName(typedName);
+
   const { error } = await supabase.auth.signInWithPassword({
     email: $('#email').value.trim(),
     password: $('#password').value,
@@ -474,10 +488,19 @@ $('#signout').addEventListener('click', async () => {
   await render();
 });
 
-$('#display-name').addEventListener('change', (e) => {
-  localStorage.setItem('display-name', e.target.value.trim());
+// 表示名の入力欄は、サインイン画面と設定画面の2か所にある。
+// どちらで直しても同じ値になるよう、まとめて面倒を見る。
+const displayNameInputs = () => document.querySelectorAll('.display-name');
+
+const setDisplayName = (value) => {
+  localStorage.setItem('display-name', value);
+  for (const input of displayNameInputs()) input.value = value;
   refreshSession();
-});
+};
+
+for (const input of displayNameInputs()) {
+  input.addEventListener('change', (e) => setDisplayName(e.target.value.trim()));
+}
 
 // 相手がピック・アーカイブした瞬間に自分の画面へ反映する
 let watching = false;
@@ -506,7 +529,7 @@ async function load() {
   $('#stamp').textContent = `最終更新 ${at.toLocaleString('ja-JP', { dateStyle: 'short', timeStyle: 'short' })}`;
   $('#timer').classList.toggle('is-alert', newCount > 0);
 
-  $('#display-name').value = localStorage.getItem('display-name') ?? '';
+  for (const input of displayNameInputs()) input.value = localStorage.getItem('display-name') ?? '';
   loadRead();
   renderChips();
   await refreshSession();
