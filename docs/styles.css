@@ -314,6 +314,53 @@ body {
 .signin-panel { padding: 0.4rem 1.1rem 0; }
 .signin-panel h2 { font-family: 'Zen Antique', serif; font-size: 1rem; font-weight: 400; margin: 0 0 0.4rem; }
 
+/* ── 開催日を直すカレンダー ──────────────── */
+.cal-head {
+  display: flex; align-items: center; justify-content: space-between;
+  margin: 0.6rem 0 0.2rem;
+  font-variant-numeric: tabular-nums;
+}
+.cal-week, .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 0.2rem; }
+.cal-week { font-size: 0.7rem; color: var(--silver); text-align: center; margin-bottom: 0.2rem; }
+
+.day {
+  /* 指で押せる大きさを確保する。ここを詰めると隣の日を押してしまう */
+  min-height: 40px;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  color: var(--fg);
+  font: inherit;
+  font-size: 0.85rem;
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+}
+.day:focus-visible { outline: 2px solid var(--timer-idle); outline-offset: -2px; }
+/* 選んだ両端と、その間 */
+.day.is-edge { background: var(--fg); color: var(--bg); font-weight: 500; }
+.day.is-between { background: color-mix(in srgb, var(--fg) 12%, transparent); }
+
+.chosen {
+  margin: 0.2rem 0 0.7rem;
+  font-size: 0.95rem;
+  font-variant-numeric: tabular-nums;
+}
+
+/* カード上の開催日。押すと直せることが分かるよう、下線を引いておく */
+.when {
+  background: transparent;
+  border: none;
+  padding: 0;
+  color: inherit;
+  font: inherit;
+  font-variant-numeric: tabular-nums;
+  border-bottom: 1px dashed var(--hairline);
+  cursor: pointer;
+}
+.when:disabled { border-bottom-color: transparent; cursor: default; }
+.when:focus-visible { outline: 2px solid var(--timer-idle); outline-offset: 2px; }
+.badge-edited { color: var(--pick); }
+
 /* 指で押しやすいよう、文字とチェックの両方を当たり判定に含める */
 .check {
   display: flex; align-items: center; gap: 0.6rem;

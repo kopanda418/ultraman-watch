@@ -18,7 +18,7 @@
   上げ忘れると「新しい index.html に古い styles.css が当たる」状態になり、
   ヘッダーが横に割れるなど、見た目が派手に崩れる。実際に起きた（2026-08-04）。
 -->
-<link rel="stylesheet" href="styles.css?v=20260805f">
+<link rel="stylesheet" href="styles.css?v=20260805g">
 </head>
 <body>
 
@@ -71,6 +71,31 @@
 
 <main id="list" class="list" aria-live="polite"></main>
 
+<!-- 開催日を直すカレンダー。1回目のタップで開始日、2回目で終了日 -->
+<section class="screen" id="date-editor" hidden>
+  <div class="screen-head">
+    <h2>開催日を直す</h2>
+    <button class="btn btn-quiet" id="date-cancel" type="button">閉じる</button>
+  </div>
+  <div class="screen-body">
+    <p class="note" id="date-title"></p>
+    <div class="cal-head">
+      <button class="icon-btn" id="date-prev" type="button" aria-label="前の月">‹</button>
+      <span id="date-month"></span>
+      <button class="icon-btn" id="date-next" type="button" aria-label="次の月">›</button>
+    </div>
+    <div class="cal-week" aria-hidden="true"><span>日</span><span>月</span><span>火</span><span>水</span><span>木</span><span>金</span><span>土</span></div>
+    <div class="cal-grid" id="date-grid" role="group" aria-label="日付を選ぶ"></div>
+    <p class="note">1回目のタップで開始日、2回目で終了日。開始日だけで保存すると1日だけの予定になります。</p>
+    <p class="chosen" id="date-chosen"></p>
+    <div class="card-foot">
+      <button class="btn" id="date-save" type="button">保存</button>
+      <button class="btn btn-quiet" id="date-clear" type="button">日程未定に戻す</button>
+    </div>
+    <p class="note" id="date-state"></p>
+  </div>
+</section>
+
 <!-- 設定は別画面。普段は一覧の邪魔をしないよう、丸ごと覆い隠す -->
 <section class="screen" id="settings" hidden>
   <div class="screen-head">
@@ -108,6 +133,6 @@
   </div>
 </section>
 
-<script type="module" src="app.js?v=20260805f"></script>
+<script type="module" src="app.js?v=20260805g"></script>
 </body>
 </html>

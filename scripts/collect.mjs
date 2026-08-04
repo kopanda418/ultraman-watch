@@ -300,17 +300,33 @@ const SUPABASE_URL = process.env.SUPABASE_URL ?? 'https://ijtywsqdudtqfkliwigo.s
 const SUPABASE_ANON_KEY =
   process.env.SUPABASE_ANON_KEY ?? 'sb_publishable_IXW1ziW7LmN46R8YZznXmw_bY_4Jd6O';
 
+const supabaseGet = async (view, select) => {
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/${view}?select=${select}`, {
+    headers: { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${SUPABASE_ANON_KEY}` },
+  });
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  return res.json();
+};
+
 async function fetchArchivedIds() {
   try {
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/archived_ids?select=id`, {
-      headers: { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${SUPABASE_ANON_KEY}` },
-    });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    return new Set((await res.json()).map((r) => r.id));
+    return new Set((await supabaseGet('archived_ids', 'id')).map((r) => r.id));
   } catch (err) {
     // 読めなくても収集は止めない。落とす順番がこれまで通りになるだけ。
     console.warn(`✗ アーカイブの取得: ${err.message}`);
     return new Set();
+  }
+}
+
+// PWA で利用者が入れ直した開催日。自動の読み取りより常に優先する。
+// 反映しないと、次の収集で自動の値に戻り、手直しが無かったことになる。
+async function fetchDateEdits() {
+  try {
+    const rows = await supabaseGet('edited_event_dates', 'id,event_date,event_end_date');
+    return new Map(rows.map((r) => [r.id, { start: r.event_date, end: r.event_end_date }]));
+  } catch (err) {
+    console.warn(`✗ 手直しした開催日の取得: ${err.message}`);
+    return new Map();
   }
 }
 
@@ -401,7 +417,8 @@ async function enrichMissingDates(items) {
   const filled = { feed: 0, search: 0 };
 
   for (const item of items) {
-    if (item.eventDate) continue;
+    // 利用者が「日程未定」に戻した項目を、本文から埋め直さない
+    if (item.eventDate || item.dateEdited) continue;
 
     let url = null;
     let via = 'feed';
@@ -438,7 +455,18 @@ async function enrichMissingDates(items) {
 
 // ── 実行 ──────────────────────────────────────────────────
 const raw = await collectAll();
-const normalized = raw.map(normalizeItem).filter(Boolean);
+
+// 利用者が PWA で入れ直した開催日は、自動の読み取りより常に優先する。
+// altKey は作り直さない。日付を直しただけで別の記事として扱われ、
+// 新着として出直してしまうため。
+const dateEdits = await fetchDateEdits();
+const applyDateEdit = (item) => {
+  const edit = dateEdits.get(item.id);
+  if (!edit) return item;
+  return { ...item, eventDate: edit.start, eventEndDate: edit.end, dateEdited: true };
+};
+
+const normalized = raw.map(normalizeItem).filter(Boolean).map(applyDateEdit);
 
 // 終わったイベント・古すぎる記事は要らない。
 // 本文を見に行く前に落としておくと、無駄な取得も減らせる。
@@ -518,6 +546,8 @@ const carried = store.items
     if (!found?.eventDate) return item;
     return { ...item, eventDate: found.eventDate, eventEndDate: found.eventEndDate ?? null };
   })
+  // 手直しは最後に当てる。自動の読み取りにも補完にも上書きされないようにする
+  .map(applyDateEdit)
   // 日が過ぎたものはここで落ちていく（上で日付が変わったものも含めて判定する）
   .filter((i) => !isStale(i));
 

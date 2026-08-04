@@ -103,6 +103,51 @@ const DATE_FILTERS = [
   { id: 'dated', label: '日程が分かるもの', match: (i) => Boolean(i.eventDate) },
 ];
 
+// ── 開催日の手直し ──────────────────────────────────────
+// 自動の読み取りが違っていたとき、利用者が入れ直した日付。2人で共有する。
+// 表示のたびに自動の値へ上書きするので、手直しが常に勝つ。
+let dateEdits = new Map(); // id → { eventDate, eventEndDate }
+
+async function fetchDateEdits() {
+  if (!supabase || !session) return;
+  const { data, error } = await supabase.from('event_dates').select('*');
+  if (error) {
+    console.warn(error.message);
+    return; // 読めなければ自動の値のまま出す
+  }
+  dateEdits = new Map(
+    data.map((r) => [r.id, { eventDate: r.event_date, eventEndDate: r.event_end_date }]),
+  );
+}
+
+async function saveDateEdit(id, eventDate, eventEndDate) {
+  const { error } = await supabase.from('event_dates').upsert({
+    id,
+    event_date: eventDate,
+    event_end_date: eventEndDate,
+    edited_by: displayName(),
+    edited_at: new Date().toISOString(),
+  });
+  if (error) throw new Error(error.message);
+}
+
+const withEdit = (item) => {
+  const edit = dateEdits.get(item.id);
+  return edit ? { ...item, ...edit, dateEdited: true } : item;
+};
+
+// 並び順は収集側の sortForDisplay（normalize.mjs）と同じ規則。
+// 手直しした日付で並びが変わるので、こちらでも並べ直す必要がある。
+// 片方だけ直すと順番が食い違うため、変えるときは両方そろえること。
+const sortForDisplay = (items) =>
+  [...items].sort((a, b) => {
+    if (a.isKanto !== b.isKanto) return a.isKanto ? -1 : 1;
+    if (a.eventDate && b.eventDate) return b.eventDate.localeCompare(a.eventDate);
+    if (a.eventDate) return -1;
+    if (b.eventDate) return 1;
+    return (b.firstSeen ?? '').localeCompare(a.firstSeen ?? '');
+  });
+
 // ── 元記事の開き方 ──────────────────────────────────────
 // ホーム画面から起動した PWA では、普通のリンクはアプリ内ブラウザで開いてしまう。
 // x-safari-https: は Safari 本体を開くための URL スキーム。Apple が公開して
@@ -223,7 +268,9 @@ function itemsFor(currentView, picks, archives) {
     DATE_FILTERS.find((d) => d.id === activeDate),
     READ_FILTERS.find((r) => r.id === activeRead),
   ].filter(Boolean);
-  return base.filter((i) => conditions.every((c) => c.match(i)));
+  // 手直しした日付を当ててから絞り込む。並びも日付で変わるので並べ直す。
+  const edited = base.map(withEdit);
+  return sortForDisplay(edited.filter((i) => conditions.every((c) => c.match(i))));
 }
 
 // 絞り込みのチップを描く。TAGS / DATE_FILTERS を増やせばそのまま増える。
@@ -288,7 +335,9 @@ function card(item) {
   const picked = pickIds.has(item.id);
   const archived = archiveIds.has(item.id);
   const where = item.prefectures?.length ? item.prefectures.join('・') : '地域不明';
-  const when = item.eventDate ? `${item.eventDate} 開催` : '日程未確定';
+  const when = item.eventDate
+    ? `${item.eventDate}${item.eventEndDate ? `〜${item.eventEndDate}` : ''} 開催`
+    : '日程未確定';
   const isNew = item.batch != null && item.batch === store.batchId;
 
   const archiveLabel = archived ? '一覧に戻す' : 'アーカイブ';
@@ -300,7 +349,9 @@ function card(item) {
       ${item.summary ? `<p>${escapeHtml(item.summary)}</p>` : ''}
       <div class="meta">
         <span>${escapeHtml(item.sourceName)}</span>
-        <span>${when}</span>
+        <button class="when" type="button"${session ? '' : ' disabled'} aria-label="開催日を直す">${when}${
+          item.dateEdited ? ' <span class="badge badge-edited">手直し</span>' : ''
+        }</button>
         <span>${escapeHtml(where)}</span>
         ${readIds.has(item.id) ? '' : '<span class="badge badge-unread">未読</span>'}
         ${isNew ? '<span class="badge badge-new">新着</span>' : ''}
@@ -333,6 +384,8 @@ function card(item) {
   bind('.pick', 'picks', pickIds, 'ピック');
   bind('.archive', 'archives', archiveIds, 'アーカイブ');
   bindSwipe(el);
+
+  el.querySelector('.when').addEventListener('click', () => openDateEditor(item));
 
   // 元記事へ飛んだら既読にする。タイトルと「元記事を開く」のどちらからでもよい。
   // ここで再描画すると、読みに行った瞬間にカードが消えることがある（未読で
@@ -431,6 +484,107 @@ function bindSwipe(el) {
   el.addEventListener('pointercancel', settle);
 }
 
+// ── 開催日を直すカレンダー ──────────────────────────────
+// 1回目のタップで開始日、2回目で終了日。3回目はやり直しで開始日に戻る。
+// 開始日だけで保存すれば、終了日なし（1日だけの予定）になる。
+// 入れやすさを第一にしているので、時刻や曜日の細かい指定は用意しない。
+let editing = null; // 編集中の項目
+let pickStart = null;
+let pickEnd = null;
+let calendarMonth = null; // その月の1日
+
+const monthStart = (iso) => {
+  const d = iso ? new Date(`${iso}T00:00:00`) : new Date();
+  return new Date(d.getFullYear(), d.getMonth(), 1);
+};
+
+function openDateEditor(item) {
+  editing = item;
+  pickStart = item.eventDate ?? null;
+  pickEnd = item.eventEndDate ?? null;
+  calendarMonth = monthStart(pickStart);
+  $('#date-title').textContent = item.title;
+  $('#date-state').textContent = '';
+  $('#date-editor').hidden = false;
+  renderCalendar();
+}
+
+const closeDateEditor = () => {
+  $('#date-editor').hidden = true;
+  editing = null;
+};
+
+function renderCalendar() {
+  const year = calendarMonth.getFullYear();
+  const month = calendarMonth.getMonth();
+  $('#date-month').textContent = `${year}年${month + 1}月`;
+
+  const grid = $('#date-grid');
+  grid.textContent = '';
+  // 週の頭を日曜に合わせるため、1日の曜日ぶんだけ空きを置く
+  for (let i = 0; i < new Date(year, month, 1).getDay(); i += 1) {
+    grid.append(document.createElement('span'));
+  }
+
+  const lastDay = new Date(year, month + 1, 0).getDate();
+  for (let day = 1; day <= lastDay; day += 1) {
+    const iso = `${year}-${pad2(month + 1)}-${pad2(day)}`;
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'day';
+    btn.textContent = String(day);
+    if (iso === pickStart || iso === pickEnd) btn.classList.add('is-edge');
+    else if (pickStart && pickEnd && iso > pickStart && iso < pickEnd) btn.classList.add('is-between');
+    btn.addEventListener('click', () => {
+      // 開始日が未定、または既に期間が決まっているなら、そこから引き直す
+      if (!pickStart || pickEnd || iso < pickStart) {
+        pickStart = iso;
+        pickEnd = null;
+      } else if (iso === pickStart) {
+        pickEnd = null; // 同じ日をもう一度押したら1日だけに戻す
+      } else {
+        pickEnd = iso;
+      }
+      renderCalendar();
+    });
+    grid.append(btn);
+  }
+
+  $('#date-chosen').textContent = pickStart
+    ? `${pickStart}${pickEnd ? `〜${pickEnd}` : '（1日だけ）'}`
+    : '日程未定';
+}
+
+$('#date-prev').addEventListener('click', () => {
+  calendarMonth = new Date(calendarMonth.getFullYear(), calendarMonth.getMonth() - 1, 1);
+  renderCalendar();
+});
+$('#date-next').addEventListener('click', () => {
+  calendarMonth = new Date(calendarMonth.getFullYear(), calendarMonth.getMonth() + 1, 1);
+  renderCalendar();
+});
+$('#date-cancel').addEventListener('click', closeDateEditor);
+
+$('#date-clear').addEventListener('click', () => {
+  pickStart = null;
+  pickEnd = null;
+  renderCalendar();
+});
+
+$('#date-save').addEventListener('click', async (e) => {
+  if (!editing) return;
+  e.target.disabled = true;
+  try {
+    await saveDateEdit(editing.id, pickStart, pickEnd);
+    closeDateEditor();
+    await render();
+  } catch (err) {
+    $('#date-state').textContent = `保存できませんでした: ${err.message}`;
+  } finally {
+    e.target.disabled = false;
+  }
+});
+
 const EMPTY = {
   all: 'まだ情報がありません。',
   picks: '気になる記事の「ピックする」を押すと、2人のどちらの端末からも見られます。',
@@ -441,6 +595,7 @@ async function render() {
   const [pickResult, archiveResult] = await Promise.all([
     fetchShelf('picks'),
     fetchShelf('archives'),
+    fetchDateEdits(),
   ]);
   const picks = pickResult.rows;
   const archives = archiveResult.rows;
@@ -546,7 +701,7 @@ function watchShelves() {
   if (!supabase || !session || watching) return;
   watching = true;
   const channel = supabase.channel('shelves');
-  for (const { table } of Object.values(SHELVES)) {
+  for (const table of [...Object.values(SHELVES).map((s) => s.table), 'event_dates']) {
     channel.on('postgres_changes', { event: '*', schema: 'public', table }, () => render());
   }
   channel.subscribe();
