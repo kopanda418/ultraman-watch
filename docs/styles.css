@@ -178,12 +178,38 @@ body {
 /* ── 一覧 ────────────────────────────────── */
 .list { padding: 1rem 1.1rem 0; display: grid; gap: 0.7rem; }
 
+/* 左スワイプでアーカイブへ送る。指の動きに追従させるため、
+   カードは「下に敷く文字」と「その上を滑る面」の二層にしている。
+   touch-action: pan-y は「縦スクロールはブラウザに任せ、横だけこちらで受ける」指定。
+   これを外すと、スワイプ中に画面が縦に動いて操作にならない。 */
 .card {
-  background: var(--card);
+  position: relative;
+  overflow: hidden;
   border: 1px solid var(--hairline);
   border-radius: 12px;
-  padding: 0.9rem 1rem;
+  touch-action: pan-y;
 }
+
+.card-face {
+  background: var(--card);
+  padding: 0.9rem 1rem;
+  /* position を付けないと、下に敷いたはずの .card-swipe のほうが上に描かれ、
+     カードのリンクもボタンも押せなくなる（位置指定のある要素が後に描かれるため）。
+     消さないこと。 */
+  position: relative;
+}
+/* 追従中は滑らかさより指との一致を優先するので、指を離したあとだけ戻す動きを付ける */
+.card.is-settling .card-face { transition: transform 0.18s ease-out; }
+
+.card-swipe {
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: flex-end;
+  padding-right: 1.2rem;
+  background: var(--bg);
+  font-size: 0.8rem; color: var(--silver);
+}
+/* 成立する量まで引けたら、離せば決まることを色で知らせる */
+.card.is-armed .card-swipe { color: var(--timer-alert); font-weight: 500; }
 
 .card h3 { margin: 0 0 0.4rem; font-size: 1rem; font-weight: 500; line-height: 1.5; }
 .card h3 a { color: inherit; text-decoration: none; }

@@ -232,25 +232,28 @@ function card(item) {
   const when = item.eventDate ? `${item.eventDate} 開催` : '日程未確定';
   const isNew = item.batch != null && item.batch === store.batchId;
 
+  const archiveLabel = archived ? '一覧に戻す' : 'アーカイブ';
+
   el.innerHTML = `
-    <h3><a href="${item.url}" target="_blank" rel="noopener">${escapeHtml(item.title)}</a></h3>
-    ${item.summary ? `<p>${escapeHtml(item.summary)}</p>` : ''}
-    <div class="meta">
-      <span>${escapeHtml(item.sourceName)}</span>
-      <span>${when}</span>
-      <span>${escapeHtml(where)}</span>
-      ${isNew ? '<span class="badge badge-new">新着</span>' : ''}
-      ${item.isKanto ? '<span class="badge badge-kanto">関東</span>' : ''}
-      ${item.savedBy ? `<span class="badge">${escapeHtml(item.savedBy)}が${view === 'archive' ? 'アーカイブ' : 'ピック'}</span>` : ''}
-    </div>
-    <div class="card-foot">
-      <button class="btn btn-quiet pick" aria-pressed="${picked}"${session ? '' : ' disabled'}>${
-        picked ? 'ピック済み' : 'ピックする'
-      }</button>
-      <button class="btn btn-quiet archive"${session ? '' : ' disabled'}>${
-        archived ? '一覧に戻す' : 'アーカイブ'
-      }</button>
-      <a class="btn btn-quiet" href="${item.url}" target="_blank" rel="noopener">元記事を開く</a>
+    <div class="card-swipe" aria-hidden="true">← ${archiveLabel}</div>
+    <div class="card-face">
+      <h3><a href="${item.url}" target="_blank" rel="noopener">${escapeHtml(item.title)}</a></h3>
+      ${item.summary ? `<p>${escapeHtml(item.summary)}</p>` : ''}
+      <div class="meta">
+        <span>${escapeHtml(item.sourceName)}</span>
+        <span>${when}</span>
+        <span>${escapeHtml(where)}</span>
+        ${isNew ? '<span class="badge badge-new">新着</span>' : ''}
+        ${item.isKanto ? '<span class="badge badge-kanto">関東</span>' : ''}
+        ${item.savedBy ? `<span class="badge">${escapeHtml(item.savedBy)}が${view === 'archive' ? 'アーカイブ' : 'ピック'}</span>` : ''}
+      </div>
+      <div class="card-foot">
+        <button class="btn btn-quiet pick" aria-pressed="${picked}"${session ? '' : ' disabled'}>${
+          picked ? 'ピック済み' : 'ピックする'
+        }</button>
+        <button class="btn btn-quiet archive"${session ? '' : ' disabled'}>${archiveLabel}</button>
+        <a class="btn btn-quiet" href="${item.url}" target="_blank" rel="noopener">元記事を開く</a>
+      </div>
     </div>`;
 
   // ピックとアーカイブは押したあとの処理が同じなので、まとめて面倒を見る。
@@ -269,8 +272,80 @@ function card(item) {
 
   bind('.pick', 'picks', pickIds, 'ピック');
   bind('.archive', 'archives', archiveIds, 'アーカイブ');
+  bindSwipe(el);
 
   return el;
+}
+
+// ── 左スワイプ ──────────────────────────────────────────
+// 左へ一定量引いて指を離すと、アーカイブのボタンを押したのと同じことが起きる
+// （アーカイブタブでは一覧に戻る）。少し触れただけで消えると事故になるので、
+// 成立には SWIPE_COMMIT 以上引くことを要求する。
+const SWIPE_START = 12;   // これを超えるまでは縦か横かを決めない
+const SWIPE_COMMIT = 88;  // ここまで引いて離せば成立
+
+function bindSwipe(el) {
+  const face = el.querySelector('.card-face');
+  const button = el.querySelector('.archive');
+  let startX = 0;
+  let startY = 0;
+  let shift = 0;
+  let tracking = false;
+  let horizontal = false;
+
+  el.addEventListener('pointerdown', (e) => {
+    // ボタンやリンクの上から始まったものは、その操作を邪魔しない
+    if (button.disabled || e.target.closest('a, button')) return;
+    startX = e.clientX;
+    startY = e.clientY;
+    shift = 0;
+    tracking = true;
+    horizontal = false;
+    el.classList.remove('is-settling');
+  });
+
+  el.addEventListener('pointermove', (e) => {
+    if (!tracking) return;
+    const dx = e.clientX - startX;
+    const dy = e.clientY - startY;
+
+    if (!horizontal) {
+      if (Math.abs(dx) < SWIPE_START && Math.abs(dy) < SWIPE_START) return;
+      // 縦のほうが大きければ、ページを読むためのスクロールとみなして手を引く
+      if (Math.abs(dy) >= Math.abs(dx)) {
+        tracking = false;
+        return;
+      }
+      horizontal = true;
+      // 指がカードの外へ出ても追い続けるための指定。
+      // 既に離されているなど、受け付けられない状況では例外になる。
+      // 捕まえられなくても追従自体はできるので、握りつぶして続ける。
+      try {
+        el.setPointerCapture(e.pointerId);
+      } catch {
+        /* 捕まえられないときはそのまま続ける */
+      }
+    }
+
+    shift = Math.min(dx, 0); // 右へは動かさない。戻す操作は用意していない
+    face.style.transform = `translateX(${shift}px)`;
+    el.classList.toggle('is-armed', shift <= -SWIPE_COMMIT);
+  });
+
+  const settle = () => {
+    if (!tracking) return;
+    const commit = shift <= -SWIPE_COMMIT;
+    tracking = false;
+    horizontal = false;
+    el.classList.add('is-settling');
+    el.classList.remove('is-armed');
+    face.style.transform = '';
+    // ボタンを押したことにする。保存も再描画も失敗時の表示もそちらに任せる
+    if (commit) button.click();
+  };
+
+  el.addEventListener('pointerup', settle);
+  el.addEventListener('pointercancel', settle);
 }
 
 const EMPTY = {
