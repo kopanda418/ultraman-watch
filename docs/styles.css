@@ -122,7 +122,9 @@ body {
 .tally { font-variant-numeric: tabular-nums; opacity: 0.7; }
 
 /* ── 絞り込み ────────────────────────────── */
-.filter-bar { flex: none; display: flex; align-items: center; gap: 0.25rem; }
+/* 「絞り込み」と、その隣の解除ボタンの間隔。解除は取り消せない操作なので、
+   閉じるつもりで解除してしまわないよう、指1本分の余裕を空けておく。 */
+.filter-bar { flex: none; display: flex; align-items: center; gap: 0.5rem; }
 
 .filter-toggle {
   display: flex;
@@ -138,20 +140,33 @@ body {
   cursor: pointer;
   white-space: nowrap;
 }
-/* 絞り込みが効いている間は、たたんでいても効いていると分かるようにする */
-.filter-toggle.is-on { border-color: var(--fg); color: var(--fg); font-weight: 500; }
+/* 絞り込みが効いている間は、たたんでいても効いていると分かるようにする。
+   枠と文字の色に加えて面でも見せる。色の変化だけだと小さくて気づきにくい。 */
+.filter-toggle.is-on {
+  border-color: var(--fg);
+  color: var(--fg);
+  font-weight: 500;
+  background: color-mix(in srgb, var(--fg) 12%, transparent);
+}
 .filter-toggle .caret { font-size: 0.65rem; transition: transform 0.15s; }
 .filter-toggle[aria-expanded='true'] .caret { transform: rotate(180deg); }
 
 .filter-clear {
   flex: none;
+  /* 絞り込みを一括解除する取り消せない操作。24px 角で隣と 4px しか離れておらず、
+     「絞り込み」を押したつもりで解除してしまう事故が起きていた。
+     見た目は控えめなまま、指の当たり判定だけ広く取る。小さくしないこと。 */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 40px;
+  min-height: 40px;
   background: transparent;
   border: none;
   color: var(--silver);
   font: inherit;
   font-size: 1rem;
   line-height: 1;
-  padding: 0.25rem 0.3rem;
   cursor: pointer;
 }
 
