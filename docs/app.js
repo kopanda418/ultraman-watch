@@ -164,6 +164,16 @@ const SAFARI_FALLBACK_MS = 900;
 
 const opensInSafari = () => localStorage.getItem(SAFARI_KEY) !== 'off';
 
+// スキームが効かなかったとき「だけ」真になってほしい判定。
+// wentAway … 一度でも背面に回ったか（Safari が出た証拠）
+// elapsed  … タイマーが実際に動くまでにかかった時間。凍結されていれば待ち時間を
+//            大きく超える。1.5倍を超えたら、その間このアプリは止められていたとみなす
+// visible  … いま前面にあるか
+// この3つを見るのは、どれか1つでは足りないため。visible だけで見ると、
+// 凍結が解けて戻ってきた瞬間に真になってしまう。
+const needsFallback = ({ wentAway, elapsed, visible }) =>
+  !wentAway && elapsed <= SAFARI_FALLBACK_MS * 1.5 && visible;
+
 // iPadOS は UA が Mac を名乗るので、タッチ点数で拾い直す。
 const isIosStandalone = () => {
   const ua = navigator.userAgent || '';
@@ -187,11 +197,40 @@ function setupExternalLinks() {
     if (!/^https?:\/\//i.test(href)) return;
 
     e.preventDefault();
+
+    // ここからが保険。効かなかったときだけ普通に開き直す。
+    //
+    // 「今このアプリが前面か」だけで判断してはいけない。iOS は背面に回った
+    // PWA の JavaScript を凍結するため、Safari が起動するとタイマーは止まり、
+    // 利用者が戻ってきた瞬間に発火する。そのときは当然「前面」なので、
+    // 保険が走ってアプリ内ブラウザまで開いてしまう。戻ると同じページが
+    // 二重に開いている、という症状はこれが原因だった（2026-08-04 実機）。
+    // 待ち時間を延ばしても直らない。むしろ持ち越される確率が上がるだけ。
+    //
+    // そこで二重に見張る。
+    //   1. 一度でも背面に回ったか（Safari が出た証拠）
+    //   2. タイマーが予定どおりの時刻に動いたか（凍結されていなかった証拠）
+    // 凍結されていれば実際の経過時間が待ち時間を大きく超えるので、そこで気づける。
+    let wentAway = false;
+    const markAway = () => {
+      if (document.visibilityState === 'hidden') wentAway = true;
+    };
+    document.addEventListener('visibilitychange', markAway);
+    window.addEventListener('pagehide', markAway);
+
+    const startedAt = Date.now();
     window.location.href = `x-safari-${href}`;
-    // Safari が立ち上がればこのアプリは背面に回る。前面のままならスキームが
-    // 効いていないので、通常の別タブで開き直す。
+
     setTimeout(() => {
-      if (document.visibilityState === 'visible') window.open(href, '_blank', 'noopener');
+      document.removeEventListener('visibilitychange', markAway);
+      window.removeEventListener('pagehide', markAway);
+
+      const fall = needsFallback({
+        wentAway,
+        elapsed: Date.now() - startedAt,
+        visible: document.visibilityState === 'visible',
+      });
+      if (fall) window.open(href, '_blank', 'noopener');
     }, SAFARI_FALLBACK_MS);
   });
 }
