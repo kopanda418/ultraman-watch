@@ -157,22 +157,43 @@ const sortForDisplay = (items) =>
 //   2. 一定時間たっても画面が残っていたら効かなかったとみなし、普通に開き直す
 // それでも具合が悪い端末のために、設定から切れるようにしてある。
 const SAFARI_KEY = 'open-in-safari';
-const SAFARI_FALLBACK_MS = 700;
+// Safari が立ち上がるまでの待ち時間。短くすると、立ち上がる前に保険が走って
+// アプリ内ブラウザまで開き、戻ったときに同じページが二重に開いた状態になる。
+// 実機で確かめられた値なので、詰めないこと（internal/pwa-external-browser.md）。
+const SAFARI_FALLBACK_MS = 900;
 
 const opensInSafari = () => localStorage.getItem(SAFARI_KEY) !== 'off';
 
-function openExternally(url) {
-  let left = false;
-  const onLeave = () => {
-    left = true;
-  };
-  document.addEventListener('visibilitychange', onLeave, { once: true });
-  window.location.href = url.replace(/^https:/i, 'x-safari-https:');
+// iPadOS は UA が Mac を名乗るので、タッチ点数で拾い直す。
+const isIosStandalone = () => {
+  const ua = navigator.userAgent || '';
+  const ios = /iPad|iPhone|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  const standalone = navigator.standalone === true || matchMedia('(display-mode: standalone)').matches;
+  return ios && standalone;
+};
 
-  setTimeout(() => {
-    document.removeEventListener('visibilitychange', onLeave);
-    if (!left && document.visibilityState === 'visible') window.open(url, '_blank', 'noopener');
-  }, SAFARI_FALLBACK_MS);
+// リンク1本ずつに付けて回らず、document で1回だけ受ける。
+// あとから描き足したカードのリンクにも自動で効き、付け忘れが起きない。
+function setupExternalLinks() {
+  if (!isIosStandalone()) return;
+
+  document.addEventListener('click', (e) => {
+    if (!opensInSafari()) return;
+    const a = e.target.closest('a');
+    // ファイルの保存は Safari に渡すと壊れるので触らない
+    if (!a || a.hasAttribute('download')) return;
+    const href = a.getAttribute('href') ?? '';
+    // tel: や blob:、アプリ内の相対リンクはそのまま通す
+    if (!/^https?:\/\//i.test(href)) return;
+
+    e.preventDefault();
+    window.location.href = `x-safari-${href}`;
+    // Safari が立ち上がればこのアプリは背面に回る。前面のままならスキームが
+    // 効いていないので、通常の別タブで開き直す。
+    setTimeout(() => {
+      if (document.visibilityState === 'visible') window.open(href, '_blank', 'noopener');
+    }, SAFARI_FALLBACK_MS);
+  });
 }
 
 // ── 未読・既読 ──────────────────────────────────────────
@@ -397,17 +418,12 @@ function card(item) {
     el.querySelector('.badge-unread')?.remove();
   };
 
+  // Safari で開く処理は document 側でまとめて受けている（setupExternalLinks）。
+  // ここは既読にするだけ。リンクの <a> で先に走るので、横取りされても取りこぼさない。
   for (const a of el.querySelectorAll('.card-face a[href]')) {
     a.addEventListener('click', markRead);
     // 長押しから「新規タブで開く」を選んだ場合など、click が来ない経路の保険
     a.addEventListener('auxclick', markRead);
-    a.addEventListener('click', (e) => {
-      // ホーム画面から起動したときだけ、Safari で開くのを試みる。
-      // 普通のブラウザで見ているときは、そのままのリンクで何も困らない。
-      if (!isStandalone || !opensInSafari()) return;
-      e.preventDefault();
-      openExternally(a.href);
-    });
   }
 
   return el;
@@ -729,6 +745,7 @@ async function load() {
   await render();
   watchShelves();
   loadSources();
+  setupExternalLinks();
 }
 
 // ── 情報源の表示 ────────────────────────────────────────
