@@ -267,6 +267,22 @@ const escapeHtml = (s) =>
 
 const isFiltered = () => activeTag !== null || activeDate !== 'all' || activeRead !== 'all';
 
+// カードの操作ボタンの絵。文字だけだと3つが1行に収まらず2段になっていた。
+// currentColor で描くので、色は CSS 側の状態（押した／押していない）に従う。
+const svg = (d) =>
+  `<svg viewBox="0 0 16 16" width="15" height="15" aria-hidden="true">${d}</svg>`;
+
+const ICON = {
+  // 旗（ピック）
+  pick: svg('<path d="M4 1.5v13M4 2.5h8l-2 2.5 2 2.5H4z" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/>'),
+  // 箱に入れる（アーカイブ）
+  archive: svg('<path d="M1.8 4.5h12.4v9H1.8zM1 2h14v2.5H1zM6.3 7.5h3.4" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/>'),
+  // 箱から戻す
+  unarchive: svg('<path d="M1.8 4.5h12.4v9H1.8zM1 2h14v2.5H1zM8 11V7.2M6.2 8.8L8 7l1.8 1.8" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/>'),
+  // 外へ開く
+  open: svg('<path d="M6.5 2.5H2.5v11h11V9.5M9.5 2.5h4v4M13.5 2.5L7 9" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/>'),
+};
+
 // ピック・アーカイブは Supabase 側に category や batch を持たせていないので、
 // 手元の一覧から補う。一覧から消えた古いものは補えないが、
 // その場合はカテゴリ・新着の絞り込みに出てこないだけ。
@@ -380,11 +396,15 @@ function card(item) {
         ${item.savedBy ? `<span class="badge">${escapeHtml(item.savedBy)}が${view === 'archive' ? 'アーカイブ' : 'ピック'}</span>` : ''}
       </div>
       <div class="card-foot">
-        <button class="btn btn-quiet pick" aria-pressed="${picked}"${session ? '' : ' disabled'}>${
-          picked ? 'ピック済み' : 'ピックする'
-        }</button>
-        <button class="btn btn-quiet archive"${session ? '' : ' disabled'}>${archiveLabel}</button>
-        <a class="btn btn-quiet" href="${item.url}" target="_blank" rel="noopener">元記事を開く</a>
+        <button class="act pick" aria-pressed="${picked}" aria-label="${picked ? 'ピックを外す' : 'ピックする'}"${session ? '' : ' disabled'}>
+          ${ICON.pick}<span>${picked ? 'ピック済み' : 'ピック'}</span>
+        </button>
+        <button class="act archive" aria-label="${archiveLabel}"${session ? '' : ' disabled'}>
+          ${archived ? ICON.unarchive : ICON.archive}<span>${archived ? '戻す' : 'アーカイブ'}</span>
+        </button>
+        <a class="act" href="${item.url}" target="_blank" rel="noopener" aria-label="元記事を開く">
+          ${ICON.open}<span>元記事</span>
+        </a>
       </div>
     </div>`;
 

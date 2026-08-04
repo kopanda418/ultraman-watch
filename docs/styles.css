@@ -245,8 +245,32 @@ body {
 /* 未読のときだけ出す。既読には何も出さない（全件に付くと目印にならないため） */
 .badge-unread { color: var(--pick); }
 
-/* ボタンが3つになったので、横に入りきらない端末では折り返す */
-.card-foot { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.7rem; }
+/* 3つの操作を必ず1段に収める。文字だけのボタンでは iPhone の幅で2段になっていた。
+   絵と短い文字にし、幅は3等分。折り返さない。 */
+.card-foot { display: flex; gap: 0.4rem; margin-top: 0.7rem; }
+
+.act {
+  flex: 1 1 0;
+  min-width: 0;
+  /* 指の当たり判定を確保する */
+  min-height: 38px;
+  display: flex; align-items: center; justify-content: center; gap: 0.3rem;
+  background: transparent;
+  border: 1px solid var(--hairline);
+  border-radius: 8px;
+  color: var(--fg);
+  font: inherit;
+  font-size: 0.75rem;
+  text-decoration: none;
+  cursor: pointer;
+}
+.act svg { flex: none; }
+/* 狭い端末では文字を落として絵だけにする。押せる幅を optically 保つため */
+.act span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.act:disabled { color: var(--silver); cursor: default; }
+/* ピック済みは一目で分かるようにする */
+.act.pick[aria-pressed='true'] { color: var(--pick); border-color: currentColor; }
+.act:focus-visible { outline: 2px solid var(--timer-idle); outline-offset: 2px; }
 
 .btn {
   background: var(--fg);
