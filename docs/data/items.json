@@ -1,7 +1,7 @@
 {
-  "generatedAt": "2026-08-03T14:52:57.988Z",
-  "batchId": "2026-08-03T14:52:57.988Z",
-  "newCount": 21,
+  "generatedAt": "2026-08-04T00:17:51.662Z",
+  "batchId": "2026-08-04T00:17:51.662Z",
+  "newCount": 1,
   "items": [
     {
       "id": "969cf75fa4ae23b4",
@@ -862,24 +862,6 @@
       "eventEndDate": "2026-08-30"
     },
     {
-      "id": "434a30f0827fe615",
-      "url": "https://news.google.com/rss/articles/CBMiSEFVX3lxTE84dGRLVkIzVEFSelloRVF5VU5tZzR5ZmhJTkNvRFRoSWRVNG9WMS1OdFp1blVRa2pwU2x4emx0Qi1CM2xqSGNXRg?oc=5",
-      "title": "SHUWATCH with U ／PARCO MUSEUM TOKYO – イベント – ウルトラマン・円谷プロ公式 - 円谷プロ公式サイト",
-      "summary": "SHUWATCH with U ／PARCO MUSEUM TOKYO – イベント – ウルトラマン・円谷プロ公式 円谷プロ公式サイト",
-      "sourceId": "news-event",
-      "sourceName": "ニュース検索（イベント）",
-      "category": "news",
-      "publishedAt": "2026-06-26T11:58:01.000Z",
-      "eventDate": "2026-07-03",
-      "prefectures": [],
-      "isKanto": false,
-      "titleKey": "shuwatchwithuparcomuseumtokyoイベントウルトラマン円谷プロ公式円谷プロ公式サイト",
-      "altKey": "151464959248b3e9",
-      "firstSeen": "2026-08-03T06:54:53.151Z",
-      "batch": "2026-08-03",
-      "eventEndDate": "2026-08-03"
-    },
-    {
       "id": "24287cd90a50448e",
       "url": "https://news.google.com/rss/articles/CBMiSEFVX3lxTE9ERzEydGpiek5iZzBLaDR6bGN1ajBjOFhHMkVhbk9JRHRqWlRoVzB0X1hSWFdTOXlMVVNHcDJxOERpYk9RV2NTRQ?oc=5",
       "title": "緊急指令！ウルトラ マルチバース 地球防衛大作戦 in 横浜赤レンガ倉庫 – イベント – ウルトラマン・円谷プロ公式 - 円谷プロ公式サイト",
@@ -896,6 +878,25 @@
       "firstSeen": "2026-08-03T06:54:53.151Z",
       "batch": "2026-08-03",
       "eventEndDate": "2026-11-30"
+    },
+    {
+      "id": "a16fb967b1e6ee42",
+      "url": "https://news.google.com/rss/articles/CBMiYEFVX3lxTFBLMDlyOXRNZjM5X3dRcENlX2F6eHBNZWJtQm40MFRXT0t3R0Z2YlAxM2E3N296WkdtajBTNExsd051WjNDNzdYd25nWi1tSmV3S1h4SDVYdHA5TGRvWk5BUA?oc=5",
+      "title": "【2025-2026】久留米市周辺 年末年始キャラクターショー・イベント情報まとめ - 久留米ファン",
+      "summary": "【2025-2026】久留米市周辺 年末年始キャラクターショー・イベント情報まとめ 久留米ファン",
+      "sourceId": "news-show",
+      "sourceName": "ニュース検索（ショー）",
+      "category": "news",
+      "publisherHost": "kurumefan.com",
+      "publishedAt": "2025-12-27T08:00:00.000Z",
+      "eventDate": null,
+      "eventEndDate": null,
+      "prefectures": [],
+      "isKanto": false,
+      "titleKey": "久留米市周辺年末年始キャラクターショーイベントまとめ久留米ファン",
+      "altKey": "a26df2c2eabcb85c",
+      "firstSeen": "2026-08-04T00:17:51.662Z",
+      "batch": "2026-08-04T00:17:51.662Z"
     },
     {
       "id": "ab24ceae77c8f5c5",
