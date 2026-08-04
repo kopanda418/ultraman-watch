@@ -108,11 +108,16 @@ export function detectEventPeriod(text, reference = new Date()) {
   const refYear = base.getFullYear();
   const refMonth = base.getMonth() + 1;
 
+  // 見た目は同じでも別の文字が使われていることがあるので、字を揃えてから読む。
+  // m-78.jp の記事に「8⽉7⽇」（月日が漢字ではなく部首の異体字）が実在した。
+  // 全角数字「１２月」も同時に揃うので、正規表現は半角だけ見ればよくなる。
+  const source = String(text ?? '').normalize('NFKC');
+
   const dates = [];
   let prevYear = null;
   let prevMonth = null;
 
-  for (const m of text.matchAll(DATE_RE)) {
+  for (const m of source.matchAll(DATE_RE)) {
     let year;
     let month;
     let day;
