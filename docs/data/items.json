@@ -1,7 +1,7 @@
 {
-  "generatedAt": "2026-08-04T05:25:13.687Z",
-  "batchId": "2026-08-04T05:25:13.687Z",
-  "newCount": 71,
+  "generatedAt": "2026-08-04T05:29:47.933Z",
+  "batchId": "2026-08-04T05:29:47.933Z",
+  "newCount": 2,
   "items": [
     {
       "id": "969cf75fa4ae23b4",
@@ -845,6 +845,44 @@
       "firstSeen": "2026-08-03T06:54:53.151Z",
       "batch": "2026-08-03",
       "eventEndDate": "2026-11-30"
+    },
+    {
+      "id": "63ee955a1c4be291",
+      "url": "https://news.google.com/rss/articles/CBMiiAFBVV95cUxNSUlmQ2hib25DOWc3TFpjU0wzd2NPRHdJZHRWZXduRUp3MGpuVTN3clRyTTVCeDZEU2RXNy0wTkl5ZndqMFNveEVfYklGeHJkbXhESlptRVB5d1Y0WGlFN2I3ZmhLdmRtY2xUTjZ1QkdpV1FwNHJYdEcyRnc1TE9CTHV6R2xQZ2Z4?oc=5",
+      "title": "【体験レポート】横浜でスマホを使ったARイベント開催中♪現実世界にウルトラマンや怪獣たちが現れる！（わっき） - エキスパート - Yahoo!ニュース",
+      "summary": "【体験レポート】横浜でスマホを使ったARイベント開催中♪現実世界にウルトラマンや怪獣たちが現れる！（わっき） - エキスパート Yahoo!ニュース",
+      "sourceId": "news-event",
+      "sourceName": "ニュース検索（イベント）",
+      "category": "news",
+      "publisherHost": "news.yahoo.co.jp",
+      "publishedAt": "2026-07-07T07:00:00.000Z",
+      "eventDate": null,
+      "eventEndDate": null,
+      "prefectures": [],
+      "isKanto": false,
+      "titleKey": "横浜でスマホを使ったarイベント中♪現実世界にウルトラマンや怪獣たちが現れるエキスパートyahooニュース",
+      "altKey": "9ce3655783013300",
+      "firstSeen": "2026-08-04T05:29:47.933Z",
+      "batch": "2026-08-04T05:29:47.933Z"
+    },
+    {
+      "id": "6c718b0db41ee301",
+      "url": "https://news.google.com/rss/articles/CBMiZ0FVX3lxTE4yR0QweHU0V3J2dlg2XzJPQnd6QXpmVkh6dFZfdDI1RlhUNVoxR0plVTBrczZUM21KbUg1NUEtNXpkZGcxSmRLR2lSaUdzbzVIOFpCcHpGQnRUWWRzUlYwX2c4OWgtV0U?oc=5",
+      "title": "イベント会場にて「S.H.Figuarts（真骨彫製法） ウルトラマン（Aタイプ） -ウルトラマン誕生-」が初お披露目！ - hobby Watch",
+      "summary": "イベント会場にて「S.H.Figuarts（真骨彫製法） ウルトラマン（Aタイプ） -ウルトラマン誕生-」が初お披露目！ hobby Watch",
+      "sourceId": "news-event",
+      "sourceName": "ニュース検索（イベント）",
+      "category": "news",
+      "publisherHost": "hobby.watch.impress.co.jp",
+      "publishedAt": "2026-07-10T07:00:00.000Z",
+      "eventDate": null,
+      "eventEndDate": null,
+      "prefectures": [],
+      "isKanto": false,
+      "titleKey": "イベント会場にてshfiguartsウルトラマンウルトラマン誕生が初お披露目hobbywatch",
+      "altKey": "3ec38c13d8779a7a",
+      "firstSeen": "2026-08-04T05:29:47.933Z",
+      "batch": "2026-08-04T05:29:47.933Z"
     },
     {
       "id": "f0bca4480b0a4068",
