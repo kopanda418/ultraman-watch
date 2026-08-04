@@ -384,16 +384,19 @@ function card(item) {
     <div class="card-face">
       <h3><a href="${item.url}" target="_blank" rel="noopener">${escapeHtml(item.title)}</a></h3>
       ${item.summary ? `<p>${escapeHtml(item.summary)}</p>` : ''}
-      <div class="meta">
-        <span>${escapeHtml(item.sourceName)}</span>
-        <button class="when" type="button"${session ? '' : ' disabled'} aria-label="開催日を直す">${when}${
-          item.dateEdited ? ' <span class="badge badge-edited">手直し</span>' : ''
-        }</button>
-        <span>${escapeHtml(where)}</span>
+      <!-- タグは本文の情報と混ぜない。混ぜると何が付いているのか一目で読めない。
+           並びは常に 未読 → 新着 → 関東 → 手直し → 誰が の順で固定する。 -->
+      <div class="tags">
         ${readIds.has(item.id) ? '' : '<span class="badge badge-unread">未読</span>'}
         ${isNew ? '<span class="badge badge-new">新着</span>' : ''}
         ${item.isKanto ? '<span class="badge badge-kanto">関東</span>' : ''}
+        ${item.dateEdited ? '<span class="badge badge-edited">日程を手直し</span>' : ''}
         ${item.savedBy ? `<span class="badge">${escapeHtml(item.savedBy)}が${view === 'archive' ? 'アーカイブ' : 'ピック'}</span>` : ''}
+      </div>
+      <div class="meta">
+        <span>${escapeHtml(item.sourceName)}</span>
+        <button class="when" type="button"${session ? '' : ' disabled'} aria-label="開催日を直す">${when}</button>
+        <span>${escapeHtml(where)}</span>
       </div>
       <div class="card-foot">
         <button class="act pick" aria-pressed="${picked}" aria-label="${picked ? 'ピックを外す' : 'ピックする'}"${session ? '' : ' disabled'}>

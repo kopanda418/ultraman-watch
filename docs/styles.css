@@ -233,12 +233,28 @@ body {
   font-variant-numeric: tabular-nums;
 }
 
+/* タグは独立した1行にまとめる。本文の情報（媒体・日付・地域）と混ぜていた頃は
+   どのタグが付いているのか一目で読めなかった。順番も常に固定する。 */
+.tags {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 0.3rem;
+  margin: 0 0 0.4rem;
+  /* 既定は控えめ。目立たせたいタグだけが下で色を上書きする */
+  color: var(--silver);
+}
+.tags:empty { display: none; } /* 付いていないカードで余白だけ空けない */
+
 .badge {
+  /* 高さと文字の大きさを揃えて、目で追う線を1本にする */
+  display: inline-flex; align-items: center;
+  height: 18px;
   border: 1px solid currentColor;
   border-radius: 4px;
-  padding: 0 0.35rem;
-  font-size: 0.7rem;
+  padding: 0 0.4rem;
+  font-size: 0.68rem;
+  line-height: 1;
+  white-space: nowrap;
 }
+/* 色は役割で分ける。同じ色を2つのタグに使うと見分けが付かなくなる */
 .badge-kanto { color: var(--timer-alert); }
 /* 「新着」はタブから絞り込みに移したので、カード側でも見て分かるようにする */
 .badge-new { color: var(--timer-idle); }
@@ -378,7 +394,8 @@ body {
 }
 .when:disabled { border-bottom-color: transparent; cursor: default; }
 .when:focus-visible { outline: 2px solid var(--timer-idle); outline-offset: 2px; }
-.badge-edited { color: var(--pick); }
+/* 手直しは事実の注記なので、未読や新着より控えめにする */
+.badge-edited { color: var(--silver); }
 
 /* 指で押しやすいよう、文字とチェックの両方を当たり判定に含める */
 .check {
