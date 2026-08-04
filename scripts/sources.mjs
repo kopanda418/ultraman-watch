@@ -6,8 +6,16 @@
 // 新しい収集元を足すときは、まず対象サイトに RSS がないか確認してください。
 // WordPress 系なら <トップURL>/feed/ が生きていることが多いです。
 
+// Google ニュースの検索は「新着順」ではなく「関連度順」で、返る件数に上限がある
+// （実測で 100 件）。期間を絞らないと 13 年前の記事まで枠の中に入り、しかも枠の
+// 中身は日をまたぐと入れ替わるため、古い記事が「初めて見る記事」として毎回
+// 流れ込んでくる。実測では上限 100 件のうち 60 日以内は 24 件しかなく、
+// 古い記事が直近の記事を押し出していた。when: で絞ると 60 日以内を 65 件
+// 拾えるようになり、取りこぼしも減る（2026-08-04 実測）。
+const NEWS_WINDOW = 'when:60d';
+
 const googleNews = (query) =>
-  `https://news.google.com/rss/search?q=${encodeURIComponent(query)}&hl=ja&gl=JP&ceid=JP:ja`;
+  `https://news.google.com/rss/search?q=${encodeURIComponent(`${query} ${NEWS_WINDOW}`)}&hl=ja&gl=JP&ceid=JP:ja`;
 
 export const SOURCES = [
   // ── 公式 ────────────────────────────────────────────────
