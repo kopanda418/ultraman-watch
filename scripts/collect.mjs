@@ -3,7 +3,13 @@ import { setTimeout as sleep } from 'node:timers/promises';
 import path from 'node:path';
 import * as cheerio from 'cheerio';
 import Parser from 'rss-parser';
-import { SOURCES, RAKUTEN } from './sources.mjs';
+import {
+  SOURCES,
+  RAKUTEN,
+  NEWS_WINDOW_DAYS,
+  NEWS_SLICE_DAYS,
+  newsSliceUrl,
+} from './sources.mjs';
 import {
   normalizeItem,
   sortForDisplay,
@@ -53,18 +59,87 @@ const hostOf = (url) => {
   }
 };
 
+const mapRssItem = (it, src) => ({
+  url: it.link,
+  title: it.title,
+  summary: (it.contentSnippet ?? it.content ?? '').replace(/<[^>]+>/g, ''),
+  publishedAt: it.isoDate ?? null,
+  publisherHost: hostOf(it.source?.[0]?.$?.url),
+  sourceId: src.id,
+  sourceName: src.name,
+  category: src.category,
+});
+
 async function fetchRss(src) {
   const feed = await rss.parseURL(src.url);
-  return (feed.items ?? []).map((it) => ({
-    url: it.link,
-    title: it.title,
-    summary: (it.contentSnippet ?? it.content ?? '').replace(/<[^>]+>/g, ''),
-    publishedAt: it.isoDate ?? null,
-    publisherHost: hostOf(it.source?.[0]?.$?.url),
-    sourceId: src.id,
-    sourceName: src.name,
-    category: src.category,
-  }));
+  return (feed.items ?? []).map((it) => mapRssItem(it, src));
+}
+
+// ── Google ニュース検索 ───────────────────────────────────
+// 1回のリクエストでは取りこぼす（sources.mjs のコメント参照）ので、
+// 対象期間を NEWS_SLICE_DAYS ずつに割って何回かに分けて取る。
+// さらに、ある区間が上限に張り付いたらその区間には確実に取りこぼしがあるので、
+// そこだけ半分に割って取り直す。際限なく叩かないよう深さで打ち切る。
+const NEWS_CAP = 100;         // これ以上は返らない＝取りこぼしの合図
+const NEWS_MAX_DEPTH = 3;     // 15日 → 最小 1.875 日まで割る
+const NEWS_MAX_REQUESTS = 24; // 1ソースあたりの上限。相手にも自分にも負担をかけすぎない
+
+// Google は検索語をゆるく解釈するため、期間を割って件数を増やすと無関係な記事も
+// 一緒に増える（実測でパズドラ・名探偵コナン・大昆虫展・ものまねライブなど、
+// 293 件中 44 件）。しかも日程未定・関東だと一覧の上のほうに出てしまう。
+// 検索結果に限り、ウルトラマン関連と分かる語が見出しにも概要にも無いものは捨てる。
+// 公式サイト由来の記事にはこの判定を掛けない（「S.H.Figuarts …」のように
+// 語が出ない見出しがあり、公式である時点で関連は保証されているため）。
+const NEWS_RELEVANT = /ウルトラ|円谷|ツブラヤ|シュワッチ|ULTRA|TSUBURAYA|M-?78/i;
+
+const looksRelevant = (raw) =>
+  NEWS_RELEVANT.test(`${raw.title ?? ''} ${raw.summary ?? ''}`.normalize('NFKC'));
+
+const DAY_MS = 86_400_000;
+const ymd = (ms) => new Date(ms).toISOString().slice(0, 10);
+
+async function fetchNews(src) {
+  const out = [];
+  let requests = 0;
+  let split = 0;
+  let dropped = 0;
+
+  // before: は指定日を含まない挙動なので、終端は 1 日先を渡す。
+  // そうしないと当日の記事が丸ごと落ちる。隣の区間と 1 日重なるが、
+  // 重複は既存の判定で潰れるので実害はない。
+  const take = async (from, to, depth) => {
+    if (requests >= NEWS_MAX_REQUESTS) return;
+    const feed = await rss.parseURL(newsSliceUrl(src.query, ymd(from), ymd(to + DAY_MS)));
+    requests += 1;
+    await sleep(POLITE_DELAY_MS);
+
+    const items = feed.items ?? [];
+    for (const raw of items.map((it) => mapRssItem(it, src))) {
+      if (looksRelevant(raw)) out.push(raw);
+      else dropped += 1;
+    }
+
+    // 上限に張り付いた区間は確実に取りこぼしがあるので、そこだけ割って取り直す
+    if (items.length >= NEWS_CAP && depth < NEWS_MAX_DEPTH) {
+      split += 1;
+      const mid = Math.round((from + to) / 2);
+      await take(from, mid, depth + 1);
+      await take(mid, to, depth + 1);
+    }
+  };
+
+  const now = Date.now();
+  const sliceMs = NEWS_SLICE_DAYS * DAY_MS;
+  for (let from = now - NEWS_WINDOW_DAYS * DAY_MS; from < now; from += sliceMs) {
+    await take(from, Math.min(from + sliceMs, now), 0);
+  }
+
+  console.log(
+    `  ${src.name}: 直近${NEWS_WINDOW_DAYS}日を ${requests} 回に分けて取得` +
+      (split ? ` / 上限に当たって再分割 ${split} 区間` : '') +
+      (dropped ? ` / 無関係として除外 ${dropped} 件` : ''),
+  );
+  return out;
 }
 
 async function fetchHtml(src) {
@@ -192,7 +267,8 @@ async function collectAll() {
   const raw = [];
   for (const src of SOURCES) {
     try {
-      const fetcher = { rss: fetchRss, imagination: fetchImagination }[src.kind] ?? fetchHtml;
+      const fetcher =
+        { rss: fetchRss, news: fetchNews, imagination: fetchImagination }[src.kind] ?? fetchHtml;
       const got = await fetcher(src);
       console.log(`✓ ${src.name}: ${got.length} 件`);
       raw.push(...got);
@@ -405,6 +481,9 @@ const reinterpret = (item) => {
 };
 
 const carried = store.items
+  // 関連性の判定も保存済みの分に遡って効かせる。そうしないと、判定を入れる前に
+  // 取り込んだ無関係な記事が保持期間いっぱい居座ってしまう。
+  .filter((item) => !item.sourceId?.startsWith('news-') || looksRelevant(item))
   .map(reinterpret)
   // 本文から補った日付は見出しから読み直せないので、今回の収集で取れた値を
   // そのまま採る。読み取りを直したとき、補完済みの分にも遡って効くようにする。
