@@ -204,8 +204,11 @@ body {
   font-size: 0.7rem;
 }
 .badge-kanto { color: var(--timer-alert); }
+/* 「新着」はタブから絞り込みに移したので、カード側でも見て分かるようにする */
+.badge-new { color: var(--timer-idle); }
 
-.card-foot { display: flex; gap: 0.5rem; margin-top: 0.7rem; }
+/* ボタンが3つになったので、横に入りきらない端末では折り返す */
+.card-foot { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.7rem; }
 
 .btn {
   background: var(--fg);

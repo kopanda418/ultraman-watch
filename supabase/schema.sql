@@ -1,5 +1,6 @@
--- ピック共有用テーブル。Supabase の SQL Editor に貼って実行してください。
+-- ピック・アーカイブ共有用テーブル。Supabase の SQL Editor に貼って実行してください。
 -- PostgREST が自動で API を生やすため、サーバーコードは書きません。
+-- 何度貼り直しても同じ結果になるように書いてあります。
 
 create table if not exists public.picks (
   id           text primary key,        -- 収集側で採番した記事 ID をそのまま使う
@@ -47,3 +48,38 @@ create policy "家族のみ削除できる"
 
 -- 相手がピックした瞬間に自分の画面へ反映させる（任意）
 alter publication supabase_realtime add table public.picks;
+
+-- ── アーカイブ ──────────────────────────────────────────
+-- 「もう見た・興味がない」として一覧から外した記事。2人で共有する。
+-- 記事の中身も一緒に持つのはピックと同じ理由に加えて、アーカイブしたものは
+-- items.json の保持上限を超えたときに真っ先に消える側だから。ID だけ持つ作りだと
+-- 消えた時点でアーカイブタブから中身が見えなくなる。
+create table if not exists public.archives (
+  id           text primary key,        -- 収集側で採番した記事 ID をそのまま使う
+  url          text not null,
+  title        text not null,
+  summary      text,
+  source_name  text,
+  event_date   date,
+  prefectures  text[],
+  is_kanto     boolean default false,
+  archived_by  text,                    -- 誰がアーカイブしたか（表示用）
+  archived_at  timestamptz default now()
+);
+
+alter table public.archives enable row level security;
+
+drop policy if exists "家族のみ閲覧できる" on public.archives;
+create policy "家族のみ閲覧できる"
+  on public.archives for select to authenticated using (public.is_ultraman_watch_family());
+
+drop policy if exists "家族のみ追加できる" on public.archives;
+create policy "家族のみ追加できる"
+  on public.archives for insert to authenticated with check (public.is_ultraman_watch_family());
+
+drop policy if exists "家族のみ削除できる" on public.archives;
+create policy "家族のみ削除できる"
+  on public.archives for delete to authenticated using (public.is_ultraman_watch_family());
+
+-- 相手がアーカイブした瞬間に自分の画面へ反映させる
+alter publication supabase_realtime add table public.archives;

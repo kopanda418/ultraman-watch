@@ -12,37 +12,50 @@ const supabase =
 
 const $ = (sel) => document.querySelector(sel);
 
-// ── ピックの保存 ────────────────────────────────────────
+// ── ピック・アーカイブの保存 ────────────────────────────
 // 正は Supabase。IndexedDB は圏外でも見られるようにするための控えです。
+// 2つは「誰がいつ」の列名が違うだけで中身は同じなので、置き場所として同じに扱う。
+const SHELVES = {
+  picks: { table: 'picks', by: 'picked_by', at: 'picked_at' },
+  archives: { table: 'archives', by: 'archived_by', at: 'archived_at' },
+};
+
 const DB_NAME = 'ultraman-watch';
-const STORE = 'picks';
+// archives を足したときに 1 から上げた。以後ストアを増やすたびに上げること。
+const DB_VERSION = 2;
 
 function openDb() {
   return new Promise((resolve, reject) => {
-    const req = indexedDB.open(DB_NAME, 1);
-    req.onupgradeneeded = () => req.result.createObjectStore(STORE, { keyPath: 'id' });
+    const req = indexedDB.open(DB_NAME, DB_VERSION);
+    req.onupgradeneeded = () => {
+      for (const name of Object.keys(SHELVES)) {
+        if (!req.result.objectStoreNames.contains(name)) {
+          req.result.createObjectStore(name, { keyPath: 'id' });
+        }
+      }
+    };
     req.onsuccess = () => resolve(req.result);
     req.onerror = () => reject(req.error);
   });
 }
 
-async function tx(mode, fn) {
+async function tx(store, mode, fn) {
   const db = await openDb();
   return new Promise((resolve, reject) => {
-    const t = db.transaction(STORE, mode);
-    const req = fn(t.objectStore(STORE));
+    const t = db.transaction(store, mode);
+    const req = fn(t.objectStore(store));
     t.oncomplete = () => resolve(req?.result);
     t.onerror = () => reject(t.error);
   });
 }
 
-const cacheAll = async (picks) => {
-  await tx('readwrite', (s) => s.clear());
-  await tx('readwrite', (s) => picks.forEach((p) => s.put(p)));
+const cacheAll = async (store, rows) => {
+  await tx(store, 'readwrite', (s) => s.clear());
+  await tx(store, 'readwrite', (s) => rows.forEach((r) => s.put(r)));
 };
-const cached = () => tx('readonly', (s) => s.getAll());
+const cached = (store) => tx(store, 'readonly', (s) => s.getAll());
 
-const toRow = (item, by) => ({
+const toRow = (shelf, item, by) => ({
   id: item.id,
   url: item.url,
   title: item.title,
@@ -51,10 +64,10 @@ const toRow = (item, by) => ({
   event_date: item.eventDate ?? null,
   prefectures: item.prefectures ?? [],
   is_kanto: Boolean(item.isKanto),
-  picked_by: by,
+  [shelf.by]: by,
 });
 
-const fromRow = (row) => ({
+const fromRow = (shelf, row) => ({
   id: row.id,
   url: row.url,
   title: row.title,
@@ -63,14 +76,16 @@ const fromRow = (row) => ({
   eventDate: row.event_date ?? null,
   prefectures: row.prefectures ?? [],
   isKanto: row.is_kanto,
-  pickedBy: row.picked_by ?? '',
-  pickedAt: row.picked_at ?? '',
+  savedBy: row[shelf.by] ?? '',
+  savedAt: row[shelf.at] ?? '',
 });
 
 // ── 絞り込み ────────────────────────────────────────────
 // タグを増やしたいときは TAGS に1行足すだけでよい。
 // match が真になるものだけが残る。id は保存用の識別子なので変えないこと。
 const TAGS = [
+  // 「新着」はタブではなく絞り込みで見る。直近の収集で見つかった項目のこと。
+  { id: 'new', label: '新着', match: (i) => i.batch === store.batchId },
   { id: 'kanto', label: '関東', match: (i) => i.isKanto },
   { id: 'other', label: '関東以外', match: (i) => !i.isKanto },
   { id: 'official', label: '公式', match: (i) => i.category === 'official' },
@@ -91,35 +106,39 @@ const DATE_FILTERS = [
 // ── 状態 ────────────────────────────────────────────────
 let store = { items: [], batchId: null, generatedAt: null };
 let pickIds = new Set();
-let view = 'new';
+let archiveIds = new Set();
+let view = 'all';
 let session = null;
 let activeTag = null; // null は「すべて」
 let activeDate = 'all';
 
 const displayName = () => localStorage.getItem('display-name') || session?.user?.email || '不明';
 
-async function fetchPicks() {
-  if (!supabase || !session) return { picks: await cached(), offline: true };
+// 置き場所（picks / archives）ごとに同じ形の読み書きをする。
+async function fetchShelf(name) {
+  const shelf = SHELVES[name];
+  if (!supabase || !session) return { rows: await cached(name), offline: true };
   const { data, error } = await supabase
-    .from('picks')
+    .from(shelf.table)
     .select('*')
-    .order('picked_at', { ascending: false });
+    .order(shelf.at, { ascending: false });
   if (error) {
     console.warn(error.message);
-    return { picks: await cached(), offline: true };
+    return { rows: await cached(name), offline: true };
   }
-  const picks = data.map(fromRow);
-  await cacheAll(picks);
-  return { picks, offline: false };
+  const rows = data.map((row) => fromRow(shelf, row));
+  await cacheAll(name, rows);
+  return { rows, offline: false };
 }
 
-async function addPick(item) {
-  const { error } = await supabase.from('picks').upsert(toRow(item, displayName()));
+async function addTo(name, item) {
+  const shelf = SHELVES[name];
+  const { error } = await supabase.from(shelf.table).upsert(toRow(shelf, item, displayName()));
   if (error) throw new Error(error.message);
 }
 
-async function removePick(id) {
-  const { error } = await supabase.from('picks').delete().eq('id', id);
+async function removeFrom(name, id) {
+  const { error } = await supabase.from(SHELVES[name].table).delete().eq('id', id);
   if (error) throw new Error(error.message);
 }
 
@@ -129,18 +148,22 @@ const escapeHtml = (s) =>
 
 const isFiltered = () => activeTag !== null || activeDate !== 'all';
 
-// ピックは Supabase 側に category を持たせていないので、手元の一覧から補う。
-// 一覧から消えた古いピックは補えないが、その場合はカテゴリ絞り込みに出てこないだけ。
-const withCategory = (item) =>
-  item.category ? item : { ...item, category: store.items.find((s) => s.id === item.id)?.category };
+// ピック・アーカイブは Supabase 側に category や batch を持たせていないので、
+// 手元の一覧から補う。一覧から消えた古いものは補えないが、
+// その場合はカテゴリ・新着の絞り込みに出てこないだけ。
+const withListData = (item) => {
+  const found = store.items.find((s) => s.id === item.id);
+  return found ? { ...item, category: found.category, batch: found.batch } : item;
+};
 
-function itemsFor(currentView, picks) {
+function itemsFor(currentView, picks, archives) {
   const base =
     currentView === 'picks'
-      ? picks.map(withCategory)
-      : currentView === 'all'
-        ? store.items
-        : store.items.filter((i) => i.batch === store.batchId);
+      ? picks.map(withListData)
+      : currentView === 'archive'
+        ? archives.map(withListData)
+        // 一覧はアーカイブしたものを除く。戻せばまたここに現れる。
+        : store.items.filter((i) => !archiveIds.has(i.id));
 
   const tag = TAGS.find((t) => t.id === activeTag);
   const dateFilter = DATE_FILTERS.find((d) => d.id === activeDate);
@@ -204,8 +227,10 @@ function card(item) {
   el.className = 'card';
 
   const picked = pickIds.has(item.id);
+  const archived = archiveIds.has(item.id);
   const where = item.prefectures?.length ? item.prefectures.join('・') : '地域不明';
   const when = item.eventDate ? `${item.eventDate} 開催` : '日程未確定';
+  const isNew = item.batch != null && item.batch === store.batchId;
 
   el.innerHTML = `
     <h3><a href="${item.url}" target="_blank" rel="noopener">${escapeHtml(item.title)}</a></h3>
@@ -214,51 +239,68 @@ function card(item) {
       <span>${escapeHtml(item.sourceName)}</span>
       <span>${when}</span>
       <span>${escapeHtml(where)}</span>
+      ${isNew ? '<span class="badge badge-new">新着</span>' : ''}
       ${item.isKanto ? '<span class="badge badge-kanto">関東</span>' : ''}
-      ${item.pickedBy ? `<span class="badge">${escapeHtml(item.pickedBy)}がピック</span>` : ''}
+      ${item.savedBy ? `<span class="badge">${escapeHtml(item.savedBy)}が${view === 'archive' ? 'アーカイブ' : 'ピック'}</span>` : ''}
     </div>
     <div class="card-foot">
       <button class="btn btn-quiet pick" aria-pressed="${picked}"${session ? '' : ' disabled'}>${
         picked ? 'ピック済み' : 'ピックする'
       }</button>
+      <button class="btn btn-quiet archive"${session ? '' : ' disabled'}>${
+        archived ? '一覧に戻す' : 'アーカイブ'
+      }</button>
       <a class="btn btn-quiet" href="${item.url}" target="_blank" rel="noopener">元記事を開く</a>
     </div>`;
 
-  el.querySelector('.pick').addEventListener('click', async (e) => {
-    e.target.disabled = true;
-    try {
-      if (pickIds.has(item.id)) await removePick(item.id);
-      else await addPick(item);
-      await render();
-    } catch (err) {
-      $('#sync-state').textContent = `ピックを保存できませんでした: ${err.message}`;
-      e.target.disabled = false;
-    }
-  });
+  // ピックとアーカイブは押したあとの処理が同じなので、まとめて面倒を見る。
+  const bind = (sel, name, ids, label) =>
+    el.querySelector(sel).addEventListener('click', async (e) => {
+      e.target.disabled = true;
+      try {
+        if (ids.has(item.id)) await removeFrom(name, item.id);
+        else await addTo(name, item);
+        await render();
+      } catch (err) {
+        $('#sync-state').textContent = `${label}を保存できませんでした: ${err.message}`;
+        e.target.disabled = false;
+      }
+    });
+
+  bind('.pick', 'picks', pickIds, 'ピック');
+  bind('.archive', 'archives', archiveIds, 'アーカイブ');
 
   return el;
 }
 
 const EMPTY = {
-  new: '今回の収集では新しい情報はありませんでした。',
-  picks: '気になる記事の「ピックする」を押すと、2人のどちらの端末からも見られます。',
   all: 'まだ情報がありません。',
+  picks: '気になる記事の「ピックする」を押すと、2人のどちらの端末からも見られます。',
+  archive: '「アーカイブ」を押した記事がここに入ります。一覧からは外れます。',
 };
 
 async function render() {
-  const { picks, offline } = await fetchPicks();
+  const [pickResult, archiveResult] = await Promise.all([
+    fetchShelf('picks'),
+    fetchShelf('archives'),
+  ]);
+  const picks = pickResult.rows;
+  const archives = archiveResult.rows;
   pickIds = new Set(picks.map((p) => p.id));
+  archiveIds = new Set(archives.map((a) => a.id));
 
   $('#sync-state').textContent = !session
-    ? 'サインインするとピックを共有できます。'
-    : offline
+    ? 'サインインするとピックとアーカイブを共有できます。'
+    : pickResult.offline || archiveResult.offline
       ? '同期できていません。手元の控えを表示しています。'
-      : `${picks.length} 件を共有中`;
-  $('#new-hint').hidden = view !== 'new';
+      : `ピック ${picks.length} 件・アーカイブ ${archives.length} 件を共有中`;
+  // 「新着」はタブから絞り込みに移したので、注記もその絞り込み中だけ出す
+  $('#new-hint').hidden = activeTag !== 'new';
+  $('#archive-hint').hidden = view !== 'archive';
 
   const list = $('#list');
   list.textContent = '';
-  const items = itemsFor(view, picks);
+  const items = itemsFor(view, picks, archives);
 
   if (items.length === 0) {
     const empty = document.createElement('p');
@@ -269,8 +311,9 @@ async function render() {
     for (const item of items) list.append(card(item));
   }
 
-  $('#tally-new').textContent = store.items.filter((i) => i.batch === store.batchId).length;
+  $('#tally-list').textContent = store.items.filter((i) => !archiveIds.has(i.id)).length;
   $('#tally-picks').textContent = pickIds.size;
+  $('#tally-archive').textContent = archiveIds.size;
 }
 
 // ── サインイン ──────────────────────────────────────────
@@ -296,7 +339,7 @@ $('#signin').addEventListener('click', async () => {
   $('#password').value = '';
   await refreshSession();
   await render();
-  watchPicks();
+  watchShelves();
 });
 
 $('#signout').addEventListener('click', async () => {
@@ -311,15 +354,16 @@ $('#display-name').addEventListener('change', (e) => {
   refreshSession();
 });
 
-// 相手がピックした瞬間に自分の画面へ反映する
+// 相手がピック・アーカイブした瞬間に自分の画面へ反映する
 let watching = false;
-function watchPicks() {
+function watchShelves() {
   if (!supabase || !session || watching) return;
   watching = true;
-  supabase
-    .channel('picks')
-    .on('postgres_changes', { event: '*', schema: 'public', table: 'picks' }, () => render())
-    .subscribe();
+  const channel = supabase.channel('shelves');
+  for (const { table } of Object.values(SHELVES)) {
+    channel.on('postgres_changes', { event: '*', schema: 'public', table }, () => render());
+  }
+  channel.subscribe();
 }
 
 // ── 起動 ────────────────────────────────────────────────
@@ -341,7 +385,7 @@ async function load() {
   renderChips();
   await refreshSession();
   await render();
-  watchPicks();
+  watchShelves();
   loadSources();
 }
 
@@ -376,7 +420,7 @@ document.querySelectorAll('.tab').forEach((tab) => {
 });
 
 $('#export-picks').addEventListener('click', async () => {
-  const picks = await cached();
+  const picks = await cached('picks');
   const blob = new Blob([JSON.stringify(picks, null, 2)], { type: 'application/json' });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);

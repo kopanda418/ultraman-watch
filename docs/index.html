@@ -18,7 +18,7 @@
   上げ忘れると「新しい index.html に古い styles.css が当たる」状態になり、
   ヘッダーが横に割れるなど、見た目が派手に崩れる。実際に起きた（2026-08-04）。
 -->
-<link rel="stylesheet" href="styles.css?v=20260804">
+<link rel="stylesheet" href="styles.css?v=20260805">
 </head>
 <body>
 
@@ -33,9 +33,9 @@
 
   <div class="masthead-nav">
     <nav class="tabs" role="tablist">
-      <button class="tab is-active" role="tab" data-view="new" aria-selected="true">新着 <span class="tally" id="tally-new">0</span></button>
+      <button class="tab is-active" role="tab" data-view="all" aria-selected="true">一覧 <span class="tally" id="tally-list">0</span></button>
       <button class="tab" role="tab" data-view="picks" aria-selected="false">ピック <span class="tally" id="tally-picks">0</span></button>
-      <button class="tab" role="tab" data-view="all" aria-selected="false">これまで</button>
+      <button class="tab" role="tab" data-view="archive" aria-selected="false">アーカイブ <span class="tally" id="tally-archive">0</span></button>
     </nav>
     <div class="filter-bar">
       <button class="filter-toggle" id="filter-toggle" type="button" aria-expanded="false" aria-controls="filters">
@@ -54,6 +54,7 @@
 
 <p class="note sync" id="sync-state">読み込み中</p>
 <p class="note sync" id="new-hint" hidden>「新着」は直近の収集で見つかった項目です。次の収集（通常2日ごと）が走ると入れ替わります。</p>
+<p class="note sync" id="archive-hint" hidden>アーカイブした記事は一覧から外れます。カードの「一覧に戻す」で戻せます。</p>
 
 <main id="list" class="list" aria-live="polite"></main>
 
@@ -90,6 +91,6 @@
   <ul class="sources" id="sources-list"></ul>
 </section>
 
-<script type="module" src="app.js?v=20260804"></script>
+<script type="module" src="app.js?v=20260805"></script>
 </body>
 </html>
