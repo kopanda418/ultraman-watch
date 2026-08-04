@@ -314,6 +314,16 @@ body {
 .signin-panel { padding: 0.4rem 1.1rem 0; }
 .signin-panel h2 { font-family: 'Zen Antique', serif; font-size: 1rem; font-weight: 400; margin: 0 0 0.4rem; }
 
+/* 指で押しやすいよう、文字とチェックの両方を当たり判定に含める */
+.check {
+  display: flex; align-items: center; gap: 0.6rem;
+  min-height: 40px;
+  margin-bottom: 0.7rem;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+.check input { width: 20px; height: 20px; flex: none; }
+
 .icon-btn {
   flex: none;
   margin-left: auto;

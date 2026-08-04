@@ -103,6 +103,33 @@ const DATE_FILTERS = [
   { id: 'dated', label: '日程が分かるもの', match: (i) => Boolean(i.eventDate) },
 ];
 
+// ── 元記事の開き方 ──────────────────────────────────────
+// ホーム画面から起動した PWA では、普通のリンクはアプリ内ブラウザで開いてしまう。
+// x-safari-https: は Safari 本体を開くための URL スキーム。Apple が公開して
+// いる仕組みではなく、効く iOS と効かない iOS がある（iOS 16 では効かないと
+// いう報告がある）ため、次の二段構えにしている。
+//   1. まずスキームで開こうとする。成功すれば画面が Safari に移る
+//   2. 一定時間たっても画面が残っていたら効かなかったとみなし、普通に開き直す
+// それでも具合が悪い端末のために、設定から切れるようにしてある。
+const SAFARI_KEY = 'open-in-safari';
+const SAFARI_FALLBACK_MS = 700;
+
+const opensInSafari = () => localStorage.getItem(SAFARI_KEY) !== 'off';
+
+function openExternally(url) {
+  let left = false;
+  const onLeave = () => {
+    left = true;
+  };
+  document.addEventListener('visibilitychange', onLeave, { once: true });
+  window.location.href = url.replace(/^https:/i, 'x-safari-https:');
+
+  setTimeout(() => {
+    document.removeEventListener('visibilitychange', onLeave);
+    if (!left && document.visibilityState === 'visible') window.open(url, '_blank', 'noopener');
+  }, SAFARI_FALLBACK_MS);
+}
+
 // ── 未読・既読 ──────────────────────────────────────────
 // 元記事へ一度でも飛べば既読。既定は未読。
 // これは端末ごとの状態で、2人の間では共有しない。相手が読んだかどうかは
@@ -310,18 +337,24 @@ function card(item) {
   // 元記事へ飛んだら既読にする。タイトルと「元記事を開く」のどちらからでもよい。
   // ここで再描画すると、読みに行った瞬間にカードが消えることがある（未読で
   // 絞り込んでいる場合）ので、バッジだけその場で外す。並びは次の描画で揃う。
-  if (!readIds.has(item.id)) {
-    const markRead = () => {
-      if (readIds.has(item.id)) return;
-      readIds.add(item.id);
-      saveRead();
-      el.querySelector('.badge-unread')?.remove();
-    };
-    for (const a of el.querySelectorAll('.card-face a[href]')) {
-      a.addEventListener('click', markRead);
-      // 長押しから「新規タブで開く」を選んだ場合など、click が来ない経路の保険
-      a.addEventListener('auxclick', markRead);
-    }
+  const markRead = () => {
+    if (readIds.has(item.id)) return;
+    readIds.add(item.id);
+    saveRead();
+    el.querySelector('.badge-unread')?.remove();
+  };
+
+  for (const a of el.querySelectorAll('.card-face a[href]')) {
+    a.addEventListener('click', markRead);
+    // 長押しから「新規タブで開く」を選んだ場合など、click が来ない経路の保険
+    a.addEventListener('auxclick', markRead);
+    a.addEventListener('click', (e) => {
+      // ホーム画面から起動したときだけ、Safari で開くのを試みる。
+      // 普通のブラウザで見ているときは、そのままのリンクで何も困らない。
+      if (!isStandalone || !opensInSafari()) return;
+      e.preventDefault();
+      openExternally(a.href);
+    });
   }
 
   return el;
@@ -460,6 +493,11 @@ const setSettingsOpen = (open) => {
 };
 $('#settings-open').addEventListener('click', () => setSettingsOpen(true));
 $('#settings-close').addEventListener('click', () => setSettingsOpen(false));
+
+$('#open-in-safari').checked = opensInSafari();
+$('#open-in-safari').addEventListener('change', (e) => {
+  localStorage.setItem(SAFARI_KEY, e.target.checked ? 'on' : 'off');
+});
 
 $('#signin').addEventListener('click', async () => {
   // 表示名を入れた直後にそのままボタンを押しても取りこぼさないよう、ここでも拾う
