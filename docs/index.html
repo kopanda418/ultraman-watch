@@ -2,7 +2,17 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<!--
+  拡大を一切させない指定。
+  user-scalable=no  … 指で広げる拡大・二本指・ダブルタップを止める
+  maximum-scale=1   … 入力欄に触れたときの自動拡大を止める
+    （iOS は文字が16px未満の入力欄にフォーカスすると勝手に拡大する。
+      文字を16pxに上げれば直るが、画面が狭くなるので拡大側を止めた）
+  viewport-fit=cover … これが無いと env(safe-area-inset-*) が常に0になる。外さないこと
+  ホーム画面から開いた PWA ではこの指定が効く。Safari のタブで開いた場合は
+  拡大の禁止を iOS が無視することがあり、そのときは従来どおり拡大される。
+-->
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <title>ウルトラマン情報</title>
 <meta name="theme-color" content="#14161F">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -18,7 +28,7 @@
   上げ忘れると「新しい index.html に古い styles.css が当たる」状態になり、
   ヘッダーが横に割れるなど、見た目が派手に崩れる。実際に起きた（2026-08-04）。
 -->
-<link rel="stylesheet" href="styles.css?v=20260805t">
+<link rel="stylesheet" href="styles.css?v=20260805u">
 </head>
 <body>
 
@@ -48,7 +58,7 @@
   <!-- 縦幅を食わないよう、絞り込みは既定でたたんでおく -->
   <div class="filters" id="filters" hidden>
     <!-- type="search" にすると iOS で「×」の消去ボタンが付く -->
-    <input class="field search" id="search" type="search" inputmode="search" autocomplete="off" placeholder="タイトルで検索" aria-label="タイトルで検索">
+    <input class="field search" id="search" type="search" inputmode="search" autocomplete="off" placeholder="タイトルで検索（打つそばから絞ります）" aria-label="タイトルで検索">
     <p class="filter-guide">タグは押すたびに <b>✓絞る</b> → <b>✕除外</b> → 指定なし と変わります。いくつでも重ねられます。</p>
     <!-- タグの列は app.js の TAGS から作る。見出しごとに1列 -->
     <div id="tag-filters"></div>
@@ -168,6 +178,6 @@
   </div>
 </section>
 
-<script type="module" src="app.js?v=20260805t"></script>
+<script type="module" src="app.js?v=20260805u"></script>
 </body>
 </html>

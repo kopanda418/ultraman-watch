@@ -30,8 +30,9 @@ state/
 - `state/seen.json` を安易に削除しない。既報が全部再通知される
 - `docs/styles.css` か `docs/app.js` を直したら、`docs/index.html` の `?v=` の数字も上げる。
   上げ忘れると新しい HTML に古い CSS が当たり、見た目が崩れる
-- 入力欄（`input` / `textarea`）の文字を 16px より小さくしない。
-  iOS が触れた瞬間に画面を拡大してしまう。小さく見せたいときは `padding` を詰める
+- `docs/index.html` のビューポート指定から `maximum-scale=1, user-scalable=no` を外さない。
+  外すと iOS が入力欄に触れた瞬間に画面を拡大する（文字が16px未満のため）。
+  `viewport-fit=cover` も外さない。無いと `env(safe-area-inset-*)` が常に0になる
 - Supabase の RLS ポリシーを無効化しない。anon キーは公開されているため、RLS だけが書き込みを守っている
 - `supabase/schema.sql` に UID やメールアドレスを書かない。このファイルは公開される。
   誰を許すかは `ultraman_watch_members` 表に入れ、中身を入れる SQL は `internal/` に置く。
