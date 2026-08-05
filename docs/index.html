@@ -18,7 +18,7 @@
   上げ忘れると「新しい index.html に古い styles.css が当たる」状態になり、
   ヘッダーが横に割れるなど、見た目が派手に崩れる。実際に起きた（2026-08-04）。
 -->
-<link rel="stylesheet" href="styles.css?v=20260805o">
+<link rel="stylesheet" href="styles.css?v=20260805p">
 </head>
 <body>
 
@@ -47,10 +47,22 @@
 
   <!-- 縦幅を食わないよう、絞り込みは既定でたたんでおく -->
   <div class="filters" id="filters" hidden>
-    <div class="chips" id="tag-filters" role="group" aria-label="タグで絞り込み"></div>
-    <div class="chips" id="date-filters" role="group" aria-label="日程で絞り込み"></div>
-    <div class="chips" id="read-filters" role="group" aria-label="未読・既読で絞り込み"></div>
-    <div class="chips" id="pick-filters" role="group" aria-label="ピックで絞り込み"></div>
+    <p class="filter-guide">タグは押すたびに <b>✓絞る</b> → <b>✕除外</b> → 指定なし と変わります。いくつでも重ねられます。</p>
+    <!-- タグの列は app.js の TAGS から作る。見出しごとに1列 -->
+    <div id="tag-filters"></div>
+
+    <div class="date-filter is-off" id="date-filter">
+      <p class="filter-head">日程</p>
+      <label class="check"><input type="checkbox" id="date-on"> 日程で絞り込む</label>
+      <div class="chips" id="date-targets" role="group" aria-label="どの日付で絞り込むか"></div>
+      <div class="date-range">
+        <input type="range" id="date-days" min="1" max="365" step="1" value="90" aria-label="何日以内か">
+        <input class="field days" type="number" id="date-days-num" min="1" max="365" step="1" value="90" inputmode="numeric" aria-label="日数">
+        <span>日以内</span>
+      </div>
+      <p class="note" id="date-filter-note"></p>
+    </div>
+
     <!-- 解除はヘッダーに置かない。「絞り込み」のすぐ隣だと、閉じるつもりで
          押してしまう事故が実際に起きたため（BACKLOG 対応済み） -->
     <button class="chip chip-clear" id="filter-clear" type="button" hidden>絞り込みを解除</button>
@@ -136,6 +148,6 @@
   </div>
 </section>
 
-<script type="module" src="app.js?v=20260805o"></script>
+<script type="module" src="app.js?v=20260805p"></script>
 </body>
 </html>

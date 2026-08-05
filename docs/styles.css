@@ -168,8 +168,28 @@ body {
 
 .filter-toggle:focus-visible { outline: 2px solid var(--timer-idle); outline-offset: 2px; }
 
-.filters { display: grid; gap: 0.35rem; }
+/* 条件が増えたぶんパネルは縦に伸びる。ヘッダーが画面を覆い尽くさないよう頭を打つ */
+.filters { display: grid; gap: 0.5rem; max-height: 60vh; overflow-y: auto; }
 .filters[hidden] { display: none; } /* display 指定は hidden 属性より強いので明示する */
+/* 横スクロールに隠れると、あるタグに気づけない。折り返して全部見せる */
+.filters .chips { flex-wrap: wrap; }
+#tag-filters { display: grid; gap: 0.3rem; }
+
+/* 何の列なのかが分からないと、絞ると除外を取り違える */
+.filter-head {
+  margin: 0.15rem 0 0;
+  font-size: 0.7rem;
+  color: var(--silver);
+  line-height: 1.4;
+}
+.filter-guide {
+  margin: 0;
+  font-size: 0.7rem;
+  color: var(--silver);
+  line-height: 1.5;
+}
+.filter-guide b { font-weight: 500; color: var(--fg); }
+
 .chips { display: flex; gap: 0.35rem; overflow-x: auto; }
 .chip {
   flex: none;
@@ -184,6 +204,46 @@ body {
 }
 .chip[aria-pressed='true'] { border-color: var(--fg); color: var(--fg); font-weight: 500; }
 .chip:focus-visible { outline: 2px solid var(--timer-idle); outline-offset: 2px; }
+
+/* タグの3状態。色だけに頼らず、✓ と ✕ の印でも見分けられるようにする */
+.chip[data-state='in'] {
+  border-color: var(--fg);
+  color: var(--fg);
+  font-weight: 500;
+  background: color-mix(in srgb, var(--fg) 10%, transparent);
+}
+.chip[data-state='out'] {
+  border-color: var(--timer-alert);
+  color: var(--timer-alert);
+  text-decoration: line-through;
+  text-decoration-thickness: 1px;
+}
+.chip-mark { font-size: 0.7rem; }
+.chip-mark:not(:empty) { margin-right: 0.2rem; }
+/* 印のぶんで幅が動くと、押すたびに列がずれて狙いにくい */
+.chip[data-state] .chip-mark:empty { display: inline-block; width: 0.75em; }
+
+/* ── 日程の絞り込み ──────────────────────── */
+.date-filter { display: grid; gap: 0.3rem; }
+/* 効いていない間も見えてはいるが、効いていないことが分かるよう薄くする */
+.date-filter.is-off .chips,
+.date-filter.is-off .date-range { opacity: 0.5; }
+
+/* 設定画面と同じ .check だが、ヘッダーの中では縦幅を詰める */
+.date-filter .check { margin-bottom: 0; min-height: 32px; font-size: 0.78rem; }
+
+.date-range { display: flex; align-items: center; gap: 0.5rem; font-size: 0.75rem; }
+.date-range input[type='range'] { flex: 1; min-width: 0; accent-color: var(--timer-idle); }
+.field.days {
+  flex: none;
+  width: 4.2rem;
+  margin: 0;
+  padding: 0.2rem 0.4rem;
+  font-size: 0.8rem;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+#date-filter-note { margin: 0; font-size: 0.68rem; line-height: 1.5; }
 
 /* ── 一覧 ────────────────────────────────── */
 .list { padding: 1rem 1.1rem 0; display: grid; gap: 0.7rem; }

@@ -81,27 +81,70 @@ const fromRow = (shelf, row) => ({
 });
 
 // ── 絞り込み ────────────────────────────────────────────
+// タグは3つの状態を持つ。押すたびに 指定なし → 絞る → 除外 → 指定なし と回る。
+// 「除外」があるので「関東以外」のような裏返しのタグは要らない。
+//
 // タグを増やしたいときは TAGS に1行足すだけでよい。
-// match が真になるものだけが残る。id は保存用の識別子なので変えないこと。
+//   id    保存用の識別子。変えないこと
+//   row   絞り込みパネルのどの見出しの下に並べるか
+//   group 同じ組で複数「絞る」を選んだときは、どれか1つに当たれば残す（or）。
+//         組が違うものどうしは、両方に当たったものだけ残す（and）。
+//         省いた場合はそのタグ単独の組として扱う。
+//         公式・ニュース・グッズ・セールは同時に成り立たないので、
+//         and にすると2つ選んだ瞬間に必ず0件になってしまう。だから同じ組にする
+//   match 真になるものが「そのタグが付いている」項目
 const TAGS = [
   // 「新着」はタブではなく絞り込みで見る。直近の収集で見つかった項目のこと。
-  { id: 'new', label: '新着', match: (i) => i.batch === store.batchId },
-  { id: 'kanto', label: '関東', match: (i) => i.isKanto },
-  { id: 'other', label: '関東以外', match: (i) => !i.isKanto },
-  { id: 'official', label: '公式', match: (i) => i.category === 'official' },
-  { id: 'sale', label: 'グッズ・セール', match: (i) => i.category === 'sale' },
+  { id: 'new', row: '記事', label: '新着', match: (i) => i.batch === store.batchId },
+  { id: 'kanto', row: '記事', label: '関東', match: (i) => i.isKanto },
+  { id: 'official', row: '記事', label: '公式', group: 'category', match: (i) => i.category === 'official' },
+  { id: 'news', row: '記事', label: 'ニュース', group: 'category', match: (i) => i.category === 'news' },
+  { id: 'sale', row: '記事', label: 'グッズ・セール', group: 'category', match: (i) => i.category === 'sale' },
+  // 日程が分からないものは日数の絞り込みの対象外なので、ここで拾えるようにしておく
+  { id: 'undated', row: '記事', label: '日程不明', match: (i) => !i.eventDate },
+  { id: 'unread', row: '自分の状態', label: '未読', match: (i) => !readIds.has(i.id) },
+  { id: 'picked', row: '自分の状態', label: 'ピック済み', match: (i) => pickIds.has(i.id) },
 ];
+
+const TAG_ROWS = [...new Set(TAGS.map((t) => t.row))];
 
 const pad2 = (n) => String(n).padStart(2, '0');
 // 端末のローカル日付。toISOString() は UTC になり日本時間とずれるので使わない。
 const localDate = (d) => `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
 const daysFromNow = (n) => localDate(new Date(Date.now() + n * 86_400_000));
 
-const DATE_FILTERS = [
-  { id: 'all', label: 'すべての日程', match: () => true },
-  { id: 'soon', label: '3か月以内', match: (i) => i.eventDate && i.eventDate <= daysFromNow(90) },
-  { id: 'dated', label: '日程が分かるもの', match: (i) => Boolean(i.eventDate) },
+// 日程の絞り込みは「どの日付を見るか」と「今日から何日ぶんか」の2つで決まる。
+// どれを見ているのかが分からなくなるのが元の作りの難点だったので、
+// 選んだ内容をそのまま日本語の一文にして画面へ出す（describe）。
+//   dateOf … その項目の対象日。取れなければ絞り込みの対象にしない
+//   match  … 対象日が範囲に入っているか。イベントは先を、記事は過去を見る
+const DATE_TARGETS = [
+  {
+    id: 'start',
+    label: 'イベント開始日',
+    describe: (n) => `イベント開始日が今日から${n}日以内のもの（すでに始まっているものも含む）`,
+    dateOf: (i) => i.eventDate,
+    match: (d, n) => d <= daysFromNow(n),
+  },
+  {
+    id: 'end',
+    label: 'イベント終了日',
+    // 終了日が無いものは1日だけの予定なので、開始日をそのまま終了日とみなす
+    describe: (n) => `イベント終了日が今日から${n}日以内のもの（見逃したくないもの）`,
+    dateOf: (i) => i.eventEndDate ?? i.eventDate,
+    match: (d, n) => d <= daysFromNow(n),
+  },
+  {
+    id: 'published',
+    label: '記事の作成日',
+    describe: (n) => `記事が${n}日以内に出たもの`,
+    dateOf: (i) => (i.publishedAt ? localDate(new Date(i.publishedAt)) : null),
+    match: (d, n) => d >= daysFromNow(-n),
+  },
 ];
+
+const DAYS_MIN = 1;
+const DAYS_MAX = 365;
 
 // ── 開催日の手直し ──────────────────────────────────────
 // 自動の読み取りが違っていたとき、利用者が入れ直した日付。2人で共有する。
@@ -286,31 +329,18 @@ function loadRead() {
 // Set は入れた順に並ぶので、末尾から数えれば新しいものが残る
 const saveRead = () => localStorage.setItem(READ_KEY, JSON.stringify([...readIds].slice(-READ_KEEP)));
 
-const READ_FILTERS = [
-  { id: 'all', label: 'すべて', match: () => true },
-  { id: 'unread', label: '未読', match: (i) => !readIds.has(i.id) },
-  { id: 'read', label: '既読', match: (i) => readIds.has(i.id) },
-];
-
-// ピックで絞り込む。狙いは「ピック済みを一覧から消して、まだ拾っていないものだけ
-// を追う」使い方。ラベルに「すべて」を使わないのは、未読・既読の列と並んだとき
-// にどちらの「すべて」か分からなくなるため。
-const PICK_FILTERS = [
-  { id: 'all', label: 'ピック問わず', match: () => true },
-  { id: 'picked', label: 'ピック済み', match: (i) => pickIds.has(i.id) },
-  { id: 'unpicked', label: 'ピックしていない', match: (i) => !pickIds.has(i.id) },
-];
-
 // ── 状態 ────────────────────────────────────────────────
 let store = { items: [], batchId: null, generatedAt: null };
 let pickIds = new Set();
 let archiveIds = new Set();
 let view = 'all';
 let session = null;
-let activeTag = null; // null は「すべて」
-let activeDate = 'all';
-let activeRead = 'all';
-let activePick = 'all';
+// タグの状態。id → 'in'（絞る）／'out'（除外）。載っていないタグは指定なし。
+let tagStates = {};
+// 日程の絞り込み。off のときは日数も対象日も効かせない。
+let dateOn = false;
+let dateTarget = 'start';
+let dateDays = 90;
 
 const displayName = () => localStorage.getItem('display-name') || session?.user?.email || '不明';
 
@@ -346,8 +376,9 @@ async function removeFrom(name, id) {
 const escapeHtml = (s) =>
   String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
-const isFiltered = () =>
-  activeTag !== null || activeDate !== 'all' || activeRead !== 'all' || activePick !== 'all';
+// 効いている条件の数。タグは1つにつき1、日程は入り切りで1と数える。
+const filterCount = () => Object.keys(tagStates).length + (dateOn ? 1 : 0);
+const isFiltered = () => filterCount() > 0;
 
 // カードの操作ボタンの絵。文字だけだと3つが1行に収まらず2段になっていた。
 // currentColor で描くので、色は CSS 側の状態（押した／押していない）に従う。
@@ -365,13 +396,46 @@ const ICON = {
   open: svg('<path d="M6.5 2.5H2.5v11h11V9.5M9.5 2.5h4v4M13.5 2.5L7 9" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/>'),
 };
 
-// ピック・アーカイブは Supabase 側に category や batch を持たせていないので、
+// ピック・アーカイブは Supabase 側にカテゴリや公開日を持たせていないので、
 // 手元の一覧から補う。一覧から消えた古いものは補えないが、
-// その場合はカテゴリ・新着の絞り込みに出てこないだけ。
+// その場合はカテゴリ・新着・日程の絞り込みに出てこないだけ。
 const withListData = (item) => {
   const found = store.items.find((s) => s.id === item.id);
-  return found ? { ...item, category: found.category, batch: found.batch } : item;
+  if (!found) return item;
+  return {
+    ...item,
+    category: found.category,
+    batch: found.batch,
+    publishedAt: found.publishedAt,
+    eventEndDate: item.eventEndDate ?? found.eventEndDate,
+  };
 };
+
+// タグの合わせ方。
+//   除外  … どれか1つでも当たったら落とす
+//   絞る  … 同じ組の中では「どれかに当たれば残す」、組をまたぐと「両方に当たったものだけ」
+function matchesTags(item, currentView) {
+  // ピックのタブは中身がすべてピック済みなので、ここで効かせると
+  // 「ピック済みを除外」を選んだ瞬間に全部消えてしまう。効かせない。
+  const active = TAGS.filter((t) => tagStates[t.id] && !(currentView === 'picks' && t.id === 'picked'));
+  if (active.some((t) => tagStates[t.id] === 'out' && t.match(item))) return false;
+
+  const includes = active.filter((t) => tagStates[t.id] === 'in');
+  const groupOf = (t) => t.group ?? t.id;
+  return [...new Set(includes.map(groupOf))].every((g) =>
+    includes.filter((t) => groupOf(t) === g).some((t) => t.match(item)),
+  );
+}
+
+// 日程の絞り込み。対象の日付が取れないものは対象にしない（＝素通しする）。
+// 「日程が分からないものは日数で消さない」という決めごとで、
+// 拾いたい・消したいときは「日程不明」タグを使う。
+function matchesDate(item) {
+  if (!dateOn) return true;
+  const target = DATE_TARGETS.find((t) => t.id === dateTarget);
+  const d = target.dateOf(item);
+  return d ? target.match(d, dateDays) : true;
+}
 
 // 絞り込みまで済ませた一覧。タブの件数も表示する中身もここから採るので、
 // 「見えている件数」と「タブに出る数字」が食い違わない。
@@ -384,58 +448,101 @@ function filteredFor(currentView, picks, archives) {
         // 一覧はアーカイブしたものを除く。戻せばまたここに現れる。
         : store.items.filter((i) => !archiveIds.has(i.id));
 
-  const conditions = [
-    TAGS.find((t) => t.id === activeTag),
-    DATE_FILTERS.find((d) => d.id === activeDate),
-    READ_FILTERS.find((r) => r.id === activeRead),
-    // ピックのタブは中身がすべてピック済みなので、ここで効かせると
-    // 「ピックしていない」を選んだ瞬間に全部消えてしまう。効かせない。
-    currentView === 'picks' ? null : PICK_FILTERS.find((p) => p.id === activePick),
-  ].filter(Boolean);
   // 手直しした日付を当ててから絞り込む
-  return base.map(withEdit).filter((i) => conditions.every((c) => c.match(i)));
+  return base
+    .map(withEdit)
+    .filter((i) => matchesTags(i, currentView) && matchesDate(i));
 }
 
 // 並びは手直しした日付で変わるので、表示の直前に並べ直す
 const itemsFor = (currentView, picks, archives) =>
   sortForDisplay(filteredFor(currentView, picks, archives));
 
-// 絞り込みのチップを描く。TAGS / DATE_FILTERS を増やせばそのまま増える。
+// スライダーを動かしている間は1目盛りごとに描き直しが走る。render() は
+// Supabase まで読みに行くので、そのまま繋ぐと通信が暴れる。少し待ってからまとめる。
+let redrawTimer = null;
+const redrawSoon = () => {
+  clearTimeout(redrawTimer);
+  redrawTimer = setTimeout(render, 200);
+};
+
+const TAG_STATE_LABEL = { in: 'で絞る', out: 'を除外' };
+// 押すたびにこの順で回る。undefined（指定なし）に戻ってくる。
+const nextTagState = (state) => (state === undefined ? 'in' : state === 'in' ? 'out' : undefined);
+
+// 絞り込みのチップを描く。TAGS を増やせばそのまま増える。
 function renderChips() {
-  const build = (container, options, active, onPick, allLabel) => {
-    container.textContent = '';
-    const entries = allLabel ? [{ id: null, label: allLabel }, ...options] : options;
-    for (const opt of entries) {
+  const rows = $('#tag-filters');
+  rows.textContent = '';
+
+  for (const row of TAG_ROWS) {
+    const head = document.createElement('p');
+    head.className = 'filter-head';
+    head.textContent = row;
+    const chips = document.createElement('div');
+    chips.className = 'chips';
+    chips.setAttribute('role', 'group');
+    chips.setAttribute('aria-label', `${row}で絞り込み`);
+
+    for (const tag of TAGS.filter((t) => t.row === row)) {
+      const state = tagStates[tag.id];
       const btn = document.createElement('button');
       btn.className = 'chip';
       btn.type = 'button';
-      btn.textContent = opt.label;
-      btn.setAttribute('aria-pressed', String(opt.id === active));
+      btn.dataset.state = state ?? 'off';
+      // ✓ と ✕ は状態を色だけに頼らず示すための印。色覚に依存させない
+      btn.innerHTML = `<span class="chip-mark" aria-hidden="true">${state === 'in' ? '✓' : state === 'out' ? '✕' : ''}</span>${escapeHtml(tag.label)}`;
+      btn.setAttribute('aria-label', `${tag.label}${TAG_STATE_LABEL[state] ?? '（指定なし）'}`);
       btn.addEventListener('click', () => {
-        onPick(opt.id);
+        const next = nextTagState(tagStates[tag.id]);
+        if (next) tagStates[tag.id] = next;
+        else delete tagStates[tag.id];
         renderChips();
         render();
       });
-      container.append(btn);
+      chips.append(btn);
     }
-  };
 
-  build($('#tag-filters'), TAGS, activeTag, (id) => { activeTag = id; }, 'すべて');
-  build($('#date-filters'), DATE_FILTERS, activeDate, (id) => { activeDate = id; });
-  build($('#read-filters'), READ_FILTERS, activeRead, (id) => { activeRead = id; });
-  build($('#pick-filters'), PICK_FILTERS, activePick, (id) => { activePick = id; });
+    rows.append(head, chips);
+  }
+
+  renderDateFilter();
   renderFilterToggle();
+}
+
+// 日程の絞り込み。どの日付に効いているのかを一文で出すのが肝で、
+// 「3か月以内」とだけ書いてあった頃はここが分からなかった。
+function renderDateFilter() {
+  const targets = $('#date-targets');
+  targets.textContent = '';
+  for (const t of DATE_TARGETS) {
+    const btn = document.createElement('button');
+    btn.className = 'chip';
+    btn.type = 'button';
+    btn.textContent = t.label;
+    btn.setAttribute('aria-pressed', String(t.id === dateTarget));
+    btn.addEventListener('click', () => {
+      dateTarget = t.id;
+      dateOn = true; // 選んだのに効かないのは分かりにくいので、そのまま入れる
+      renderChips();
+      render();
+    });
+    targets.append(btn);
+  }
+
+  $('#date-on').checked = dateOn;
+  $('#date-days').value = String(dateDays);
+  $('#date-days-num').value = String(dateDays);
+  $('#date-filter').classList.toggle('is-off', !dateOn);
+  $('#date-filter-note').textContent = dateOn
+    ? `${DATE_TARGETS.find((t) => t.id === dateTarget).describe(dateDays)}だけを表示しています。日程が分からない記事は絞り込みの対象外です（「日程不明」で絞る／除外できます）。`
+    : '日数を動かすか、上の日付を選ぶと効きはじめます。';
 }
 
 // たたんでいる間も、絞り込みが効いていることが分かるようにする。
 // 条件名まで出すとボタンが伸びてタブを押し潰すので、件数だけを添える。
 function renderFilterToggle() {
-  const count =
-    (activeTag === null ? 0 : 1) +
-    (activeDate === 'all' ? 0 : 1) +
-    (activeRead === 'all' ? 0 : 1) +
-    (activePick === 'all' ? 0 : 1);
-
+  const count = filterCount();
   $('#filter-tally').textContent = count > 0 ? String(count) : '';
   $('#filter-toggle').classList.toggle('is-on', count > 0);
   $('#filter-clear').hidden = count === 0;
@@ -451,14 +558,33 @@ $('#filter-toggle').addEventListener('click', () => {
 });
 
 $('#filter-clear').addEventListener('click', () => {
-  activeTag = null;
-  activeDate = 'all';
-  activeRead = 'all';
-  activePick = 'all';
+  tagStates = {};
+  dateOn = false;
   setFiltersOpen(false);
   renderChips();
   render();
 });
+
+$('#date-on').addEventListener('change', (e) => {
+  dateOn = e.target.checked;
+  renderChips();
+  render();
+});
+
+// スライダーと数値入力は同じ値を指す。片方を動かせばもう片方も揃う。
+const setDays = (value) => {
+  const n = Math.min(DAYS_MAX, Math.max(DAYS_MIN, Math.round(Number(value) || 0)));
+  dateDays = n;
+  dateOn = true;
+  // タグ側は日数と関係ないので描き直さない。動かしている最中に作り直すと重い
+  renderDateFilter();
+  renderFilterToggle();
+  redrawSoon();
+};
+
+$('#date-days').addEventListener('input', (e) => setDays(e.target.value));
+// 数値入力は打っている途中の空欄や桁の増減で値が飛ぶので、確定してから拾う
+$('#date-days-num').addEventListener('change', (e) => setDays(e.target.value));
 
 function card(item) {
   const el = document.createElement('article');
@@ -742,7 +868,7 @@ async function render() {
       ? '同期できていません。手元の控えを表示しています。'
       : `ピック ${picks.length} 件・アーカイブ ${archives.length} 件を共有中`;
   // 「新着」はタブから絞り込みに移したので、注記もその絞り込み中だけ出す
-  $('#new-hint').hidden = activeTag !== 'new';
+  $('#new-hint').hidden = tagStates.new !== 'in';
   $('#archive-hint').hidden = view !== 'archive';
 
   const list = $('#list');
