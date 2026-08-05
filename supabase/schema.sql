@@ -20,13 +20,36 @@ alter table public.picks enable row level security;
 
 -- このプロジェクトは既存の別アプリと共用しているため、
 -- 「認証済みなら誰でも」ではなく本人・配偶者の UID だけを明示的に許可する。
+--
+-- ただし UID はこのファイルに書かない。このファイルは公開リポジトリに入るため。
+-- 誰を許すかは下のメンバー表に入れておき、判定はそこを見に行く。
+-- 表の中身の入れ方は internal/supabase-members.sql（リポジトリには入れない）。
+--
+-- 【注意】この表が空だと誰も読み書きできなくなる。schema.sql を流したら、
+-- 続けて必ずメンバーの登録も済ませること。
+create table if not exists public.ultraman_watch_members (
+  uid   uuid primary key,
+  note  text                             -- 「本人」「配偶者」など、人が見て分かる覚書
+);
+
+-- 誰が許可されているかの一覧そのものは、外から一切読めないようにする。
+-- 行レベルセキュリティを有効にしたうえでポリシーを1つも作らない＝全部拒否。
+alter table public.ultraman_watch_members enable row level security;
+-- Supabase は public スキーマの表に既定で権限を配るので、明示的に取り上げる
+revoke all on public.ultraman_watch_members from anon, authenticated;
+
+-- security definer は「呼んだ人ではなく、この関数を作った人の権限で動く」指定。
+-- こうしないと上で閉じたメンバー表を関数自身も読めず、常に false になる。
+-- search_path を空にしてあるので、中の名前はすべてスキーマ付きで書くこと。
 create or replace function public.is_ultraman_watch_family()
 returns boolean
-language sql stable
+language sql
+stable
+security definer
+set search_path = ''
 as $$
-  select auth.uid() in (
-    '4213126d-660a-481f-bb4a-72c42c25664b',
-    '7c506286-c179-4817-9fdf-b7282609ad47'
+  select exists (
+    select 1 from public.ultraman_watch_members where uid = auth.uid()
   );
 $$;
 

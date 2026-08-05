@@ -31,6 +31,10 @@ state/
 - `docs/styles.css` か `docs/app.js` を直したら、`docs/index.html` の `?v=` の数字も上げる。
   上げ忘れると新しい HTML に古い CSS が当たり、見た目が崩れる
 - Supabase の RLS ポリシーを無効化しない。anon キーは公開されているため、RLS だけが書き込みを守っている
+- `supabase/schema.sql` に UID やメールアドレスを書かない。このファイルは公開される。
+  誰を許すかは `ultraman_watch_members` 表に入れ、中身を入れる SQL は `internal/` に置く。
+  **`schema.sql` を流したら `internal/supabase-members.sql` も必ず流すこと。**
+  メンバー表が空だと、2人ともピック・アーカイブ・コメントを読み書きできなくなる
 - コメントとコミットメッセージは日本語で書く
 
 ## よく使うコマンド
