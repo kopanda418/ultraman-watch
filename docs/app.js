@@ -292,6 +292,15 @@ const READ_FILTERS = [
   { id: 'read', label: '既読', match: (i) => readIds.has(i.id) },
 ];
 
+// ピックで絞り込む。狙いは「ピック済みを一覧から消して、まだ拾っていないものだけ
+// を追う」使い方。ラベルに「すべて」を使わないのは、未読・既読の列と並んだとき
+// にどちらの「すべて」か分からなくなるため。
+const PICK_FILTERS = [
+  { id: 'all', label: 'ピック問わず', match: () => true },
+  { id: 'picked', label: 'ピック済み', match: (i) => pickIds.has(i.id) },
+  { id: 'unpicked', label: 'ピックしていない', match: (i) => !pickIds.has(i.id) },
+];
+
 // ── 状態 ────────────────────────────────────────────────
 let store = { items: [], batchId: null, generatedAt: null };
 let pickIds = new Set();
@@ -301,6 +310,7 @@ let session = null;
 let activeTag = null; // null は「すべて」
 let activeDate = 'all';
 let activeRead = 'all';
+let activePick = 'all';
 
 const displayName = () => localStorage.getItem('display-name') || session?.user?.email || '不明';
 
@@ -336,7 +346,8 @@ async function removeFrom(name, id) {
 const escapeHtml = (s) =>
   String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
-const isFiltered = () => activeTag !== null || activeDate !== 'all' || activeRead !== 'all';
+const isFiltered = () =>
+  activeTag !== null || activeDate !== 'all' || activeRead !== 'all' || activePick !== 'all';
 
 // カードの操作ボタンの絵。文字だけだと3つが1行に収まらず2段になっていた。
 // currentColor で描くので、色は CSS 側の状態（押した／押していない）に従う。
@@ -377,6 +388,9 @@ function filteredFor(currentView, picks, archives) {
     TAGS.find((t) => t.id === activeTag),
     DATE_FILTERS.find((d) => d.id === activeDate),
     READ_FILTERS.find((r) => r.id === activeRead),
+    // ピックのタブは中身がすべてピック済みなので、ここで効かせると
+    // 「ピックしていない」を選んだ瞬間に全部消えてしまう。効かせない。
+    currentView === 'picks' ? null : PICK_FILTERS.find((p) => p.id === activePick),
   ].filter(Boolean);
   // 手直しした日付を当ててから絞り込む
   return base.map(withEdit).filter((i) => conditions.every((c) => c.match(i)));
@@ -409,6 +423,7 @@ function renderChips() {
   build($('#tag-filters'), TAGS, activeTag, (id) => { activeTag = id; }, 'すべて');
   build($('#date-filters'), DATE_FILTERS, activeDate, (id) => { activeDate = id; });
   build($('#read-filters'), READ_FILTERS, activeRead, (id) => { activeRead = id; });
+  build($('#pick-filters'), PICK_FILTERS, activePick, (id) => { activePick = id; });
   renderFilterToggle();
 }
 
@@ -416,7 +431,10 @@ function renderChips() {
 // 条件名まで出すとボタンが伸びてタブを押し潰すので、件数だけを添える。
 function renderFilterToggle() {
   const count =
-    (activeTag === null ? 0 : 1) + (activeDate === 'all' ? 0 : 1) + (activeRead === 'all' ? 0 : 1);
+    (activeTag === null ? 0 : 1) +
+    (activeDate === 'all' ? 0 : 1) +
+    (activeRead === 'all' ? 0 : 1) +
+    (activePick === 'all' ? 0 : 1);
 
   $('#filter-tally').textContent = count > 0 ? String(count) : '';
   $('#filter-toggle').classList.toggle('is-on', count > 0);
@@ -436,6 +454,7 @@ $('#filter-clear').addEventListener('click', () => {
   activeTag = null;
   activeDate = 'all';
   activeRead = 'all';
+  activePick = 'all';
   setFiltersOpen(false);
   renderChips();
   render();

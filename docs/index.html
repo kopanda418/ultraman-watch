@@ -18,7 +18,7 @@
   上げ忘れると「新しい index.html に古い styles.css が当たる」状態になり、
   ヘッダーが横に割れるなど、見た目が派手に崩れる。実際に起きた（2026-08-04）。
 -->
-<link rel="stylesheet" href="styles.css?v=20260805n">
+<link rel="stylesheet" href="styles.css?v=20260805o">
 </head>
 <body>
 
@@ -50,6 +50,7 @@
     <div class="chips" id="tag-filters" role="group" aria-label="タグで絞り込み"></div>
     <div class="chips" id="date-filters" role="group" aria-label="日程で絞り込み"></div>
     <div class="chips" id="read-filters" role="group" aria-label="未読・既読で絞り込み"></div>
+    <div class="chips" id="pick-filters" role="group" aria-label="ピックで絞り込み"></div>
     <!-- 解除はヘッダーに置かない。「絞り込み」のすぐ隣だと、閉じるつもりで
          押してしまう事故が実際に起きたため（BACKLOG 対応済み） -->
     <button class="chip chip-clear" id="filter-clear" type="button" hidden>絞り込みを解除</button>
@@ -135,6 +136,6 @@
   </div>
 </section>
 
-<script type="module" src="app.js?v=20260805n"></script>
+<script type="module" src="app.js?v=20260805o"></script>
 </body>
 </html>
