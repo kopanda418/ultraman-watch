@@ -289,6 +289,36 @@ body {
 /* 成立する量まで引けたら、離せば決まることを色で知らせる */
 .card.is-armed .card-swipe { color: var(--timer-alert); font-weight: 500; }
 
+/* 開催日を直すと並び順が変わってカードが画面外へ飛ぶ。移動先まで
+   スクロールしたうえで、数秒だけ縁を光らせて目印にする。
+   .card は overflow: hidden だが、自分自身の影は外側に出るので消えない。 */
+.card.is-revealed { animation: reveal 3s ease-out; }
+@keyframes reveal {
+  0%, 45% { box-shadow: 0 0 0 2px var(--timer-idle); }
+  100% { box-shadow: 0 0 0 2px transparent; }
+}
+/* 動きを控える設定のときは、点滅めいた変化をやめて枠だけ出す */
+@media (prefers-reduced-motion: reduce) {
+  .card.is-revealed { animation: none; box-shadow: 0 0 0 2px var(--timer-idle); }
+}
+
+/* ── 短いお知らせ ────────────────────────── */
+.toast {
+  position: fixed;
+  left: 1.1rem; right: 1.1rem;
+  bottom: calc(env(safe-area-inset-bottom) + 1.1rem);
+  z-index: 20;
+  margin: 0;
+  padding: 0.7rem 0.9rem;
+  border-radius: 10px;
+  background: var(--fg);
+  color: var(--bg);
+  font-size: 0.8rem;
+  line-height: 1.5;
+  box-shadow: 0 6px 20px rgb(0 0 0 / 0.25);
+}
+.toast[hidden] { display: none; } /* display 指定は hidden 属性より強いので明示する */
+
 .card h3 { margin: 0 0 0.4rem; font-size: 1rem; font-weight: 500; line-height: 1.5; }
 .card h3 a { color: inherit; text-decoration: none; }
 .card h3 a:hover { text-decoration: underline; }

@@ -18,7 +18,7 @@
   上げ忘れると「新しい index.html に古い styles.css が当たる」状態になり、
   ヘッダーが横に割れるなど、見た目が派手に崩れる。実際に起きた（2026-08-04）。
 -->
-<link rel="stylesheet" href="styles.css?v=20260805q">
+<link rel="stylesheet" href="styles.css?v=20260805r">
 </head>
 <body>
 
@@ -88,6 +88,9 @@
 
 <main id="list" class="list" aria-live="polite"></main>
 
+<!-- 操作の結果を数秒だけ知らせる。画面下に浮かせるので一覧の位置をずらさない -->
+<p class="toast" id="toast" role="status" aria-live="polite" hidden></p>
+
 <!-- 開催日を直すカレンダー。1回目のタップで開始日、2回目で終了日 -->
 <section class="screen" id="date-editor" hidden>
   <div class="screen-head">
@@ -150,6 +153,6 @@
   </div>
 </section>
 
-<script type="module" src="app.js?v=20260805q"></script>
+<script type="module" src="app.js?v=20260805r"></script>
 </body>
 </html>

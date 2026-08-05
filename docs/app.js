@@ -621,6 +621,8 @@ $('#date-days-num').addEventListener('change', (e) => setDays(e.target.value));
 function card(item) {
   const el = document.createElement('article');
   el.className = 'card';
+  // 日程を直したあと、移動先のカードを探し当てるための目印
+  el.dataset.id = item.id;
 
   const picked = pickIds.has(item.id);
   const archived = archiveIds.has(item.id);
@@ -776,6 +778,42 @@ function bindSwipe(el) {
   el.addEventListener('pointercancel', settle);
 }
 
+// ── 短いお知らせ（トースト） ────────────────────────────
+// 画面下に数秒だけ出して消える。操作の結果を伝えるだけのものなので、
+// 押す場所は用意しない。読み上げには載せたいので aria-live は HTML 側で付けてある。
+const TOAST_MS = 4000;
+let toastTimer = null;
+
+function toast(message) {
+  const el = $('#toast');
+  el.textContent = message;
+  el.hidden = false;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => { el.hidden = true; }, TOAST_MS);
+}
+
+// ── 直したカードを見失わないようにする ──────────────────
+// 開催日を入れると並び順（関東優先 → 開催日の降順）がその場で変わるので、
+// いま見ていたカードが画面の外へ飛んでいく。仕様どおりの動きではあるが、
+// 続けて直したいときに毎回探し直すことになる。
+// そこで保存のあと、移動先までスクロールして数秒だけ光らせる。
+const REVEAL_MS = 3000;
+
+function revealCard(id, savedMessage) {
+  const el = $(`.card[data-id="${id}"]`);
+  if (!el) {
+    // 絞り込みの条件から外れて、一覧そのものから消えた場合
+    toast('日程を保存しました。いまの絞り込みでは表示されない位置に移りました。');
+    return;
+  }
+  // 動きを控える設定にしている人には、いきなり飛ばす
+  const gentle = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  el.scrollIntoView({ block: 'center', behavior: gentle ? 'auto' : 'smooth' });
+  el.classList.add('is-revealed');
+  setTimeout(() => el.classList.remove('is-revealed'), REVEAL_MS);
+  toast(savedMessage);
+}
+
 // ── 開催日を直すカレンダー ──────────────────────────────
 // 1回目のタップで開始日、2回目で終了日。3回目はやり直しで開始日に戻る。
 // 開始日だけで保存すれば、終了日なし（1日だけの予定）になる。
@@ -867,9 +905,17 @@ $('#date-save').addEventListener('click', async (e) => {
   if (!editing) return;
   e.target.disabled = true;
   try {
-    await saveDateEdit(editing.id, pickStart, pickEnd);
+    const id = editing.id;
+    await saveDateEdit(id, pickStart, pickEnd);
     closeDateEditor();
     await render();
+    // 並び順が変わってカードが飛ぶので、移動先まで連れていく
+    revealCard(
+      id,
+      pickStart
+        ? `日程を「${pickStart}${pickEnd ? `〜${pickEnd}` : ''}」にしました。並び順が変わったので、この位置へ移りました。`
+        : '日程未定に戻しました。並び順が変わったので、この位置へ移りました。',
+    );
   } catch (err) {
     $('#date-state').textContent = `保存できませんでした: ${err.message}`;
   } finally {
