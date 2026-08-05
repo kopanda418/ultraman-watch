@@ -146,6 +146,21 @@ const DATE_TARGETS = [
 const DAYS_MIN = 1;
 const DAYS_MAX = 365;
 
+// ── タイトル検索 ────────────────────────────────────────
+// 打つそばから絞り込む。見出しだけを見る（本文まで見ると、狙った記事より
+// たまたま語が出てくる記事のほうが多くなって役に立たない）。
+//
+// 日本語は同じ言葉でも書き方が何通りもあるので、検索する側とされる側の
+// 両方で字を揃えてから比べる。「うるとらまん」でも「ウルトラマン」に当たり、
+// 「ＴＨＥ　ＬＩＶＥ」でも「the live」に当たる。
+const searchKey = (s) =>
+  String(s ?? '')
+    .normalize('NFKC')       // 全角の英数字・記号を半角に揃える
+    .toLowerCase()           // 大文字小文字の違いを消す
+    // カタカナをひらがなに寄せる。この2つは並びが同じなので 0x60 ずらすだけでよい
+    .replace(/[ァ-ヶ]/g, (c) => String.fromCharCode(c.charCodeAt(0) - 0x60))
+    .replace(/[\s　]/g, ''); // 空白の有無で外さないよう、まとめて落とす
+
 // ── 開催日の手直し ──────────────────────────────────────
 // 自動の読み取りが違っていたとき、利用者が入れ直した日付。2人で共有する。
 // 表示のたびに自動の値へ上書きするので、手直しが常に勝つ。
@@ -337,6 +352,9 @@ let view = 'all';
 let session = null;
 // タグの状態。id → 'in'（絞る）／'out'（除外）。載っていないタグは指定なし。
 let tagStates = {};
+// タイトル検索。queryKey は searchKey を通したあとの形で、打つたびに作り直す。
+let query = '';
+let queryKey = '';
 // 日程の絞り込み。off のときは日数も対象日も効かせない。
 let dateOn = false;
 let dateTarget = 'start';
@@ -376,8 +394,8 @@ async function removeFrom(name, id) {
 const escapeHtml = (s) =>
   String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
-// 効いている条件の数。タグは1つにつき1、日程は入り切りで1と数える。
-const filterCount = () => Object.keys(tagStates).length + (dateOn ? 1 : 0);
+// 効いている条件の数。タグは1つにつき1、日程と検索はそれぞれ1と数える。
+const filterCount = () => Object.keys(tagStates).length + (dateOn ? 1 : 0) + (queryKey ? 1 : 0);
 const isFiltered = () => filterCount() > 0;
 
 // カードの操作ボタンの絵。文字だけだと3つが1行に収まらず2段になっていた。
@@ -437,6 +455,8 @@ function matchesDate(item) {
   return d ? target.match(d, dateDays) : true;
 }
 
+const matchesQuery = (item) => !queryKey || searchKey(item.title).includes(queryKey);
+
 // 絞り込みまで済ませた一覧。タブの件数も表示する中身もここから採るので、
 // 「見えている件数」と「タブに出る数字」が食い違わない。
 function filteredFor(currentView, picks, archives) {
@@ -451,7 +471,7 @@ function filteredFor(currentView, picks, archives) {
   // 手直しした日付を当ててから絞り込む
   return base
     .map(withEdit)
-    .filter((i) => matchesTags(i, currentView) && matchesDate(i));
+    .filter((i) => matchesQuery(i) && matchesTags(i, currentView) && matchesDate(i));
 }
 
 // 並びは手直しした日付で変わるので、表示の直前に並べ直す
@@ -560,9 +580,21 @@ $('#filter-toggle').addEventListener('click', () => {
 $('#filter-clear').addEventListener('click', () => {
   tagStates = {};
   dateOn = false;
+  query = '';
+  queryKey = '';
+  $('#search').value = '';
   setFiltersOpen(false);
   renderChips();
   render();
+});
+
+// 打つそばから絞る。1文字ごとに render() を呼ぶと Supabase まで読みに
+// いってしまうので、少し待ってからまとめる（redrawSoon）。
+$('#search').addEventListener('input', (e) => {
+  query = e.target.value;
+  queryKey = searchKey(query);
+  renderFilterToggle();
+  redrawSoon();
 });
 
 $('#date-on').addEventListener('change', (e) => {

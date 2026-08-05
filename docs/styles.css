@@ -173,6 +173,14 @@ body {
 .filters[hidden] { display: none; } /* display 指定は hidden 属性より強いので明示する */
 /* 横スクロールに隠れると、あるタグに気づけない。折り返して全部見せる */
 .filters .chips { flex-wrap: wrap; }
+
+.field.search {
+  margin: 0;
+  padding: 0.35rem 0.6rem;
+  font-size: 0.8rem;
+}
+/* Safari が付ける消去ボタンは、暗い配色だと見えなくなるので色を当て直す */
+.field.search::-webkit-search-cancel-button { filter: grayscale(1) opacity(0.6); }
 #tag-filters { display: grid; gap: 0.3rem; }
 
 /* 何の列なのかが分からないと、絞ると除外を取り違える */
