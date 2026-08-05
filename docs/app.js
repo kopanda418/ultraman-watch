@@ -21,14 +21,17 @@ const SHELVES = {
 };
 
 const DB_NAME = 'ultraman-watch';
-// archives を足したときに 1 から上げた。以後ストアを増やすたびに上げること。
-const DB_VERSION = 2;
+// archives を足したときに 1 → 2、comments を足したときに 2 → 3 にした。
+// 以後ストアを増やすたびに上げること。上げないと新しいストアが作られない。
+const DB_VERSION = 3;
+// どれも keyPath は 'id'。comments は記事IDではなくコメント自身の uuid が入る。
+const STORES = [...Object.keys(SHELVES), 'comments'];
 
 function openDb() {
   return new Promise((resolve, reject) => {
     const req = indexedDB.open(DB_NAME, DB_VERSION);
     req.onupgradeneeded = () => {
-      for (const name of Object.keys(SHELVES)) {
+      for (const name of STORES) {
         if (!req.result.objectStoreNames.contains(name)) {
           req.result.createObjectStore(name, { keyPath: 'id' });
         }
@@ -79,6 +82,53 @@ const fromRow = (shelf, row) => ({
   savedBy: row[shelf.by] ?? '',
   savedAt: row[shelf.at] ?? '',
 });
+
+// ── コメント ────────────────────────────────────────────
+// 1つの記事に何件でも積む、2人のやり取り。ピックやアーカイブと違って
+// 「1記事1行」ではないので、置き場所の作り（SHELVES）には乗せていない。
+// 圏外でも読めるよう、読み込んだものは IndexedDB に控える。
+let commentsByItem = new Map(); // 記事ID → コメントの配列（古い順）
+
+const groupComments = (rows) => {
+  const map = new Map();
+  // 古い順に並べる。会話は上から下へ読むもので、新しい順だと筋が追えない
+  for (const row of [...rows].sort((a, b) => (a.written_at ?? '').localeCompare(b.written_at ?? ''))) {
+    if (!map.has(row.item_id)) map.set(row.item_id, []);
+    map.get(row.item_id).push(row);
+  }
+  return map;
+};
+
+async function fetchComments() {
+  if (!supabase || !session) {
+    commentsByItem = groupComments(await cached('comments'));
+    return;
+  }
+  const { data, error } = await supabase.from('comments').select('*');
+  if (error) {
+    console.warn(error.message);
+    commentsByItem = groupComments(await cached('comments')); // 読めなければ控えを出す
+    return;
+  }
+  await cacheAll('comments', data);
+  commentsByItem = groupComments(data);
+}
+
+async function addComment(itemId, body) {
+  const { error } = await supabase.from('comments').insert({
+    item_id: itemId,
+    body,
+    written_by: displayName(),
+  });
+  if (error) throw new Error(error.message);
+}
+
+async function removeComment(commentId) {
+  const { error } = await supabase.from('comments').delete().eq('id', commentId);
+  if (error) throw new Error(error.message);
+}
+
+const commentsFor = (itemId) => commentsByItem.get(itemId) ?? [];
 
 // ── 絞り込み ────────────────────────────────────────────
 // タグは3つの状態を持つ。押すたびに 指定なし → 絞る → 除外 → 指定なし と回る。
@@ -398,6 +448,12 @@ const escapeHtml = (s) =>
 const filterCount = () => Object.keys(tagStates).length + (dateOn ? 1 : 0) + (queryKey ? 1 : 0);
 const isFiltered = () => filterCount() > 0;
 
+// 長い文字列を1行に収まる長さで切る。改行はそのまま出すと行が増えるので潰す。
+const clip = (s, n) => {
+  const flat = String(s ?? '').replace(/\s+/g, ' ').trim();
+  return flat.length > n ? `${flat.slice(0, n)}…` : flat;
+};
+
 // カードの操作ボタンの絵。文字だけだと3つが1行に収まらず2段になっていた。
 // currentColor で描くので、色は CSS 側の状態（押した／押していない）に従う。
 const svg = (d) =>
@@ -412,6 +468,8 @@ const ICON = {
   unarchive: svg('<path d="M1.8 4.5h12.4v9H1.8zM1 2h14v2.5H1zM8 11V7.2M6.2 8.8L8 7l1.8 1.8" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/>'),
   // 外へ開く
   open: svg('<path d="M6.5 2.5H2.5v11h11V9.5M9.5 2.5h4v4M13.5 2.5L7 9" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/>'),
+  // 吹き出し（コメント）
+  comment: svg('<path d="M2 3.5h12v8H6.5L3.5 14v-2.5H2z" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/>'),
 };
 
 // ピック・アーカイブは Supabase 側にカテゴリや公開日を持たせていないので、
@@ -634,6 +692,15 @@ function card(item) {
 
   const archiveLabel = archived ? '一覧に戻す' : 'アーカイブ';
 
+  // コメントは操作ボタンの下に1行で出す。件数と直近の1件をちらっと見せるので、
+  // 開かなくても会話があるかどうかが分かる。ボタンを4つに増やすと 390px 幅で
+  // 2段に折れてしまうため、この形にしている。
+  const talk = commentsFor(item.id);
+  const last = talk[talk.length - 1];
+  const commentLabel = last
+    ? `${talk.length}件・${last.written_by || '名無し'}「${clip(last.body, 14)}」`
+    : 'コメントを書く';
+
   el.innerHTML = `
     <div class="card-swipe" aria-hidden="true">← ${archiveLabel}</div>
     <div class="card-face">
@@ -664,6 +731,9 @@ function card(item) {
           ${ICON.open}<span>元記事</span>
         </a>
       </div>
+      <button class="card-comments${talk.length ? ' has-talk' : ''}" type="button"${session ? '' : ' disabled'} aria-label="コメントを開く">
+        ${ICON.comment}<span>${escapeHtml(commentLabel)}</span><span class="chevron" aria-hidden="true">›</span>
+      </button>
     </div>`;
 
   // ピックとアーカイブは押したあとの処理が同じなので、まとめて面倒を見る。
@@ -685,6 +755,7 @@ function card(item) {
   bindSwipe(el);
 
   el.querySelector('.when').addEventListener('click', () => openDateEditor(item));
+  el.querySelector('.card-comments').addEventListener('click', () => openComments(item));
 
   // 元記事へ飛んだら既読にする。タイトルと「元記事を開く」のどちらからでもよい。
   // ここで再描画すると、読みに行った瞬間にカードが消えることがある（未読で
@@ -814,6 +885,99 @@ function revealCard(id, savedMessage) {
   toast(savedMessage);
 }
 
+// ── コメントの画面 ──────────────────────────────────────
+// 開催日のカレンダーと同じく、一覧の上に丸ごと覆い被せる。
+// 会話は上から下へ読むものなので、古い順に並べて下に書き足していく。
+let talking = null; // 開いている記事
+
+// 「8/5 21:03」の形。年は付けない（同じ年のやり取りがほとんどで、長くなるだけ）
+const commentTime = (iso) => {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return '';
+  return `${d.getMonth() + 1}/${d.getDate()} ${d.getHours()}:${pad2(d.getMinutes())}`;
+};
+
+function openComments(item) {
+  talking = item;
+  $('#comment-title').textContent = item.title;
+  $('#comment-state').textContent = '';
+  $('#comment-body').value = '';
+  $('#comment-screen').hidden = false;
+  renderComments();
+}
+
+const closeComments = () => {
+  $('#comment-screen').hidden = true;
+  talking = null;
+};
+
+function renderComments() {
+  const list = $('#comment-list');
+  list.textContent = '';
+  const rows = commentsFor(talking.id);
+
+  if (rows.length === 0) {
+    const empty = document.createElement('p');
+    empty.className = 'note';
+    empty.textContent = 'まだコメントはありません。下の欄に書くと、2人のどちらの端末からも見られます。';
+    list.append(empty);
+    return;
+  }
+
+  const me = displayName();
+  for (const row of rows) {
+    const el = document.createElement('div');
+    el.className = 'comment';
+    el.innerHTML = `
+      <p class="comment-head">
+        <span class="comment-who">${escapeHtml(row.written_by || '名無し')}</span>
+        <span class="comment-when">${commentTime(row.written_at)}</span>
+      </p>
+      <p class="comment-body">${escapeHtml(row.body)}</p>`;
+
+    // 消せるのは自分が書いたものだけ。表側の作法で、DB は2人のどちらからも
+    // 消せる（表示名は自由に変えられる文字列なので、権限の判断材料にできない）。
+    if (row.written_by === me) {
+      const del = document.createElement('button');
+      del.className = 'btn btn-quiet comment-delete';
+      del.type = 'button';
+      del.textContent = '消す';
+      del.addEventListener('click', async () => {
+        del.disabled = true;
+        try {
+          await removeComment(row.id);
+          await render();
+          renderComments();
+        } catch (err) {
+          $('#comment-state').textContent = `消せませんでした: ${err.message}`;
+          del.disabled = false;
+        }
+      });
+      el.append(del);
+    }
+    list.append(el);
+  }
+}
+
+$('#comment-close').addEventListener('click', closeComments);
+
+$('#comment-send').addEventListener('click', async (e) => {
+  const body = $('#comment-body').value.trim();
+  if (!talking || !body) return;
+  e.target.disabled = true;
+  try {
+    await addComment(talking.id, body);
+    $('#comment-body').value = '';
+    $('#comment-state').textContent = '';
+    await render();       // カードの1行（件数と直近の1件）を更新する
+    renderComments();
+  } catch (err) {
+    $('#comment-state').textContent = `送れませんでした: ${err.message}`;
+  } finally {
+    e.target.disabled = false;
+  }
+});
+
 // ── 開催日を直すカレンダー ──────────────────────────────
 // 1回目のタップで開始日、2回目で終了日。3回目はやり直しで開始日に戻る。
 // 開始日だけで保存すれば、終了日なし（1日だけの予定）になる。
@@ -934,6 +1098,7 @@ async function render() {
     fetchShelf('picks'),
     fetchShelf('archives'),
     fetchDateEdits(),
+    fetchComments(),
   ]);
   const picks = pickResult.rows;
   const archives = archiveResult.rows;
@@ -1042,8 +1207,12 @@ function watchShelves() {
   if (!supabase || !session || watching) return;
   watching = true;
   const channel = supabase.channel('shelves');
-  for (const table of [...Object.values(SHELVES).map((s) => s.table), 'event_dates']) {
-    channel.on('postgres_changes', { event: '*', schema: 'public', table }, () => render());
+  for (const table of [...Object.values(SHELVES).map((s) => s.table), 'event_dates', 'comments']) {
+    channel.on('postgres_changes', { event: '*', schema: 'public', table }, async () => {
+      await render();
+      // コメントの画面を開いたままなら、相手の書き込みをその場に反映する
+      if (talking) renderComments();
+    });
   }
   channel.subscribe();
 }

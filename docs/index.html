@@ -18,7 +18,7 @@
   上げ忘れると「新しい index.html に古い styles.css が当たる」状態になり、
   ヘッダーが横に割れるなど、見た目が派手に崩れる。実際に起きた（2026-08-04）。
 -->
-<link rel="stylesheet" href="styles.css?v=20260805r">
+<link rel="stylesheet" href="styles.css?v=20260805s">
 </head>
 <body>
 
@@ -91,6 +91,21 @@
 <!-- 操作の結果を数秒だけ知らせる。画面下に浮かせるので一覧の位置をずらさない -->
 <p class="toast" id="toast" role="status" aria-live="polite" hidden></p>
 
+<!-- コメント。1つの記事に何件でも積む、2人のやり取り -->
+<section class="screen" id="comment-screen" hidden>
+  <div class="screen-head">
+    <h2>コメント</h2>
+    <button class="btn btn-quiet" id="comment-close" type="button">閉じる</button>
+  </div>
+  <div class="screen-body">
+    <p class="note" id="comment-title"></p>
+    <div class="comments" id="comment-list" aria-live="polite"></div>
+    <textarea class="field comment-input" id="comment-body" rows="3" placeholder="コメントを書く"></textarea>
+    <button class="btn" id="comment-send" type="button">送る</button>
+    <p class="note" id="comment-state"></p>
+  </div>
+</section>
+
 <!-- 開催日を直すカレンダー。1回目のタップで開始日、2回目で終了日 -->
 <section class="screen" id="date-editor" hidden>
   <div class="screen-head">
@@ -153,6 +168,6 @@
   </div>
 </section>
 
-<script type="module" src="app.js?v=20260805r"></script>
+<script type="module" src="app.js?v=20260805s"></script>
 </body>
 </html>

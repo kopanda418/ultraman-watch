@@ -130,6 +130,47 @@ do $$ begin
 exception when duplicate_object then null;
 end $$;
 
+-- ── コメント ────────────────────────────────────────────
+-- 記事について2人でやり取りするための書き込み。1つの記事に何件でも積む。
+-- ピックやアーカイブと違い「1記事1行」ではないので、主キーは記事IDではなく
+-- コメント自身の uuid。記事IDは item_id で持つ。
+--
+-- 「自分のコメントだけ削除できる」を行レベルセキュリティで縛るには、
+-- 書いた人を UID で持つ必要がある。ここでは持たない。表示名（written_by）は
+-- 利用者が自由に変えられる文字列で、UID とは結びつかないため。
+-- 2人しか触れない表なので、削除はどちらからでも通す作りにし、
+-- 削除ボタンを自分の書き込みにだけ出すのは画面側の作法として扱う。
+create table if not exists public.comments (
+  id          uuid primary key default gen_random_uuid(),
+  item_id     text not null,          -- 収集側で採番した記事 ID
+  body        text not null,
+  written_by  text,                   -- 誰が書いたか（表示用）
+  written_at  timestamptz default now()
+);
+
+-- 記事ごとに引くので、その列に索引を付ける
+create index if not exists comments_item_id_idx on public.comments (item_id);
+
+alter table public.comments enable row level security;
+
+drop policy if exists "家族のみ閲覧できる" on public.comments;
+create policy "家族のみ閲覧できる"
+  on public.comments for select to authenticated using (public.is_ultraman_watch_family());
+
+drop policy if exists "家族のみ追加できる" on public.comments;
+create policy "家族のみ追加できる"
+  on public.comments for insert to authenticated with check (public.is_ultraman_watch_family());
+
+drop policy if exists "家族のみ削除できる" on public.comments;
+create policy "家族のみ削除できる"
+  on public.comments for delete to authenticated using (public.is_ultraman_watch_family());
+
+-- 相手が書き込んだ瞬間に自分の画面へ反映させる（重複時の扱いは picks と同じ）
+do $$ begin
+  alter publication supabase_realtime add table public.comments;
+exception when duplicate_object then null;
+end $$;
+
 -- ── 収集スクリプトへ渡す窓 ──────────────────────────────
 -- 収集スクリプト（GitHub Actions）は、保持上限を超えた分をアーカイブ済みから
 -- 先に落とすために「どの記事がアーカイブされたか」だけを知る必要がある。
