@@ -18,7 +18,7 @@
   上げ忘れると「新しい index.html に古い styles.css が当たる」状態になり、
   ヘッダーが横に割れるなど、見た目が派手に崩れる。実際に起きた（2026-08-04）。
 -->
-<link rel="stylesheet" href="styles.css?v=20260805s">
+<link rel="stylesheet" href="styles.css?v=20260805t">
 </head>
 <body>
 
@@ -48,7 +48,7 @@
   <!-- 縦幅を食わないよう、絞り込みは既定でたたんでおく -->
   <div class="filters" id="filters" hidden>
     <!-- type="search" にすると iOS で「×」の消去ボタンが付く -->
-    <input class="field search" id="search" type="search" inputmode="search" autocomplete="off" placeholder="タイトルで検索（打つそばから絞ります）" aria-label="タイトルで検索">
+    <input class="field search" id="search" type="search" inputmode="search" autocomplete="off" placeholder="タイトルで検索" aria-label="タイトルで検索">
     <p class="filter-guide">タグは押すたびに <b>✓絞る</b> → <b>✕除外</b> → 指定なし と変わります。いくつでも重ねられます。</p>
     <!-- タグの列は app.js の TAGS から作る。見出しごとに1列 -->
     <div id="tag-filters"></div>
@@ -168,6 +168,6 @@
   </div>
 </section>
 
-<script type="module" src="app.js?v=20260805s"></script>
+<script type="module" src="app.js?v=20260805t"></script>
 </body>
 </html>
