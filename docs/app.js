@@ -154,25 +154,35 @@ const sortForDisplay = (items) =>
 // いる仕組みではなく、効く iOS と効かない iOS がある（iOS 16 では効かないと
 // いう報告がある）ため、次の二段構えにしている。
 //   1. まずスキームで開こうとする。成功すれば画面が Safari に移る
-//   2. 一定時間たっても画面が残っていたら効かなかったとみなし、普通に開き直す
+//   2. 一定時間ずっと画面が前面のまま動いていたら効かなかったとみなし、開き直す
 // それでも具合が悪い端末のために、設定から切れるようにしてある。
 const SAFARI_KEY = 'open-in-safari';
-// Safari が立ち上がるまでの待ち時間。短くすると、立ち上がる前に保険が走って
-// アプリ内ブラウザまで開き、戻ったときに同じページが二重に開いた状態になる。
-// 実機で確かめられた値なので、詰めないこと（internal/pwa-external-browser.md）。
-const SAFARI_FALLBACK_MS = 900;
+// スキームが効くと分かった端末の目印。一度でも Safari が立ち上がったのを見届けたら
+// 以後は保険そのものを出さない。効く端末で二重に開く事故を根から断つため。
+const SAFARI_OK_KEY = 'safari-scheme-ok';
+// 「効かなかった」と言い切るまでに、前面で動き続けていることを見張る時間。
+// Safari が立ち上がるまでの1〜2秒はこのアプリもまだ前面で動いているので、
+// これを短くすると立ち上がり途中の姿を見て誤判定し、二重に開く。
+const SAFARI_WATCH_MS = 3000;
+// 見張りの間隔。この何倍も間が空いたら、その間 iOS に止められていたとみなす。
+const SAFARI_TICK_MS = 250;
 
 const opensInSafari = () => localStorage.getItem(SAFARI_KEY) !== 'off';
+const safariSchemeKnownGood = () => localStorage.getItem(SAFARI_OK_KEY) === '1';
 
-// スキームが効かなかったとき「だけ」真になってほしい判定。
-// wentAway … 一度でも背面に回ったか（Safari が出た証拠）
-// elapsed  … タイマーが実際に動くまでにかかった時間。凍結されていれば待ち時間を
-//            大きく超える。1.5倍を超えたら、その間このアプリは止められていたとみなす
-// visible  … いま前面にあるか
-// この3つを見るのは、どれか1つでは足りないため。visible だけで見ると、
-// 凍結が解けて戻ってきた瞬間に真になってしまう。
-const needsFallback = ({ wentAway, elapsed, visible }) =>
-  !wentAway && elapsed <= SAFARI_FALLBACK_MS * 1.5 && visible;
+// 見張りの1回分の判定。純粋な関数なので実機なしで確かめられる。
+//   hidden  … いま背面にあるか（Safari が出た証拠）
+//   gap     … 前回の見張りからの間隔。凍結されていれば大きく空く
+//   elapsed … 見張りを始めてからの合計時間
+// 返り値は worked（Safari が出た）／failed（効かなかった）／watching（まだ分からない）。
+//   背面にいる                    hidden=true            → worked
+//   戻ってきて時計が飛んでいる    gap=31000              → worked
+//   前面のまま1秒                 elapsed=1000           → watching（ここで決めない）
+//   前面で動き続けて3秒           elapsed=3000           → failed
+const judgeSafariTick = ({ hidden, gap, elapsed }) => {
+  if (hidden || gap > SAFARI_TICK_MS * 4) return 'worked';
+  return elapsed >= SAFARI_WATCH_MS ? 'failed' : 'watching';
+};
 
 // iPadOS は UA が Mac を名乗るので、タッチ点数で拾い直す。
 const isIosStandalone = () => {
@@ -197,42 +207,64 @@ function setupExternalLinks() {
     if (!/^https?:\/\//i.test(href)) return;
 
     e.preventDefault();
-
-    // ここからが保険。効かなかったときだけ普通に開き直す。
-    //
-    // 「今このアプリが前面か」だけで判断してはいけない。iOS は背面に回った
-    // PWA の JavaScript を凍結するため、Safari が起動するとタイマーは止まり、
-    // 利用者が戻ってきた瞬間に発火する。そのときは当然「前面」なので、
-    // 保険が走ってアプリ内ブラウザまで開いてしまう。戻ると同じページが
-    // 二重に開いている、という症状はこれが原因だった（2026-08-04 実機）。
-    // 待ち時間を延ばしても直らない。むしろ持ち越される確率が上がるだけ。
-    //
-    // そこで二重に見張る。
-    //   1. 一度でも背面に回ったか（Safari が出た証拠）
-    //   2. タイマーが予定どおりの時刻に動いたか（凍結されていなかった証拠）
-    // 凍結されていれば実際の経過時間が待ち時間を大きく超えるので、そこで気づける。
-    let wentAway = false;
-    const markAway = () => {
-      if (document.visibilityState === 'hidden') wentAway = true;
-    };
-    document.addEventListener('visibilitychange', markAway);
-    window.addEventListener('pagehide', markAway);
-
-    const startedAt = Date.now();
     window.location.href = `x-safari-${href}`;
 
-    setTimeout(() => {
-      document.removeEventListener('visibilitychange', markAway);
-      window.removeEventListener('pagehide', markAway);
-
-      const fall = needsFallback({
-        wentAway,
-        elapsed: Date.now() - startedAt,
-        visible: document.visibilityState === 'visible',
-      });
-      if (fall) window.open(href, '_blank', 'noopener');
-    }, SAFARI_FALLBACK_MS);
+    // スキームが効くと分かっている端末では、ここで終わり。保険は出さない。
+    if (safariSchemeKnownGood()) return;
+    watchSafariLaunch(() => window.open(href, '_blank', 'noopener'));
   });
+}
+
+// スキームが効かなかったときだけ保険を出すための見張り。
+//
+// 一度きりのタイマーで「まだ前面か」を見てはいけない。二通りの外し方がある。
+//   1. Safari が立ち上がるまでの1〜2秒、このアプリはまだ前面で動いている。
+//      その途中を見ると「効かなかった」に見える（→ アプリ内ブラウザまで開く）
+//   2. iOS は背面に回った PWA の JavaScript を凍結するので、戻ってきた瞬間に
+//      止まっていたタイマーが発火する。そのときも当然「前面」に見える
+// 待ち時間の調整では直らない。1 は延ばすほど、2 は縮めるほど当たるためで、
+// 一発勝負である限りどちらかに当たり続ける（2026-08-05）。
+//
+// そこで、点ではなく線で見る。SAFARI_WATCH_MS の間ずっと前面で動き続けたときだけ
+// 「効かなかった」と判断する。途中で背面に回れば 1 を、時計が飛んでいれば
+// （＝止められていた）2 を、それぞれその場で見抜ける。
+function watchSafariLaunch(onFailed) {
+  const startedAt = Date.now();
+  let last = startedAt;
+  let done = false;
+
+  const finish = (worked) => {
+    if (done) return;
+    done = true;
+    clearInterval(timer);
+    document.removeEventListener('visibilitychange', onLeave);
+    window.removeEventListener('pagehide', onLeave);
+    window.removeEventListener('blur', onLeave);
+    // 効くと分かったら覚えておく。次からは見張りごと省ける
+    if (worked) localStorage.setItem(SAFARI_OK_KEY, '1');
+    else onFailed();
+  };
+
+  // 背面化は見張りの合間にも起きる。取り逃さないよう、イベントでも受ける。
+  const onLeave = (e) => {
+    if (e.type === 'visibilitychange' && document.visibilityState !== 'hidden') return;
+    finish(true);
+  };
+
+  const timer = setInterval(() => {
+    const now = Date.now();
+    const verdict = judgeSafariTick({
+      hidden: document.visibilityState !== 'visible',
+      gap: now - last,
+      elapsed: now - startedAt,
+    });
+    last = now;
+    if (verdict !== 'watching') finish(verdict === 'worked');
+  }, SAFARI_TICK_MS);
+
+  document.addEventListener('visibilitychange', onLeave);
+  window.addEventListener('pagehide', onLeave);
+  window.addEventListener('blur', onLeave);
 }
 
 // ── 未読・既読 ──────────────────────────────────────────
