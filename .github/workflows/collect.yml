@@ -1,10 +1,12 @@
 name: 情報収集
 
 on:
-  # 毎日 06:00 JST に起動し、1日おきかどうかはスクリプト側で判定する。
-  # cron の */2 は月をまたぐと連続実行になるため、この形にしています。
+  # 毎日 11:30 JST（＝02:30 UTC）に起動する。
+  # GitHub の定時実行は時刻を保証せず、混雑時は10〜60分遅れることがある。
+  # 何日おきに実処理するかは RUN_EVERY_N_DAYS でスクリプト側が決める。
+  # cron の */2 は月をまたぐと連続実行になるため、この形を崩さないこと。
   schedule:
-    - cron: '0 21 * * *'
+    - cron: '30 2 * * *'
   workflow_dispatch:
 
 permissions:
@@ -29,7 +31,8 @@ jobs:
 
       - name: 収集
         env:
-          RUN_EVERY_N_DAYS: '2'
+          # 1 なら毎日そのまま収集する。間引きに戻すときは 2 に上げる
+          RUN_EVERY_N_DAYS: '1'
           FORCE: ${{ github.event_name == 'workflow_dispatch' }}
           RAKUTEN_APP_ID: ${{ secrets.RAKUTEN_APP_ID }}
         run: node scripts/collect.mjs

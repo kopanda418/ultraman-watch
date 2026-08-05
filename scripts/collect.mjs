@@ -34,11 +34,12 @@ const POLITE_DELAY_MS = 3000;    // 相手サーバーへの間隔
 const UA = 'ultraman-watch/1.0 (personal event tracker)';
 
 const force = process.env.FORCE === 'true';
-const everyNDays = Number(process.env.RUN_EVERY_N_DAYS ?? 2);
+const everyNDays = Number(process.env.RUN_EVERY_N_DAYS ?? 1);
 
-// ── 1日おき判定 ────────────────────────────────────────────
-// cron の */2 は月をまたぐと連続実行になるため、毎日起動して
-// ここで通算日数の剰余を見る。
+// ── 何日おきに動かすかの判定 ────────────────────────────────
+// いまは毎日（1）なのでここは素通しになる。間引きに戻すときのために残してある。
+// cron の */2 は月をまたぐと連続実行になるため、間引くときも毎日起動して
+// ここで通算日数の剰余を見ること。
 const epochDay = Math.floor(Date.now() / 86_400_000);
 if (!force && everyNDays > 1 && epochDay % everyNDays !== 0) {
   console.log(`今日は収集対象外の日です（epochDay=${epochDay}）。何もせず終了します。`);
