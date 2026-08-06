@@ -2,12 +2,12 @@
 
 ## プロジェクト概要
 
-ウルトラマン関連のイベント・特売情報を毎日 11:30 に自動収集し、iPhone の PWA で閲覧・通知するツール。利用者は本人と配偶者の2名。通知は両方の iPhone に届く。
+ウルトラマン関連のイベント・特売情報を毎日 10:00 に自動収集（GitHub の都合で数時間遅れることがある）し、iPhone の PWA で閲覧・通知するツール。利用者は本人と配偶者の2名。通知は両方の iPhone に届く。
 
 ## 構成
 
 ```
-.github/workflows/collect.yml  GitHub Actions（毎日 11:30 JST に起動）
+.github/workflows/collect.yml  GitHub Actions（毎日 10:00 JST に起動を要求。実際の起動は遅れる）
 scripts/
   sources.mjs      収集元の定義。ここを増やす／直すことが最も多い
   normalize.mjs    URL正規化・ID生成・地域判定・重複判定の材料
