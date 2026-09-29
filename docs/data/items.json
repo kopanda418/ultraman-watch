@@ -1,7 +1,7 @@
 {
-  "generatedAt": "2026-09-28T06:09:44.060Z",
-  "batchId": "2026-09-28T06:09:44.060Z",
-  "newCount": 5,
+  "generatedAt": "2026-09-29T06:27:14.348Z",
+  "batchId": "2026-09-29T06:27:14.348Z",
+  "newCount": 1,
   "items": [
     {
       "id": "dc3d45701e0e44de",
@@ -65,6 +65,28 @@
       "altKey": "270fb5220ef440b2",
       "firstSeen": "2026-09-19T05:21:18.512Z",
       "batch": "2026-09-19T05:21:18.512Z"
+    },
+    {
+      "id": "252355fc6346e597",
+      "url": "https://news.google.com/rss/articles/CBMiREFVX3lxTE9ET2pPZUVOWU1fTkRTeXExc3c2NVdCd2pQdnNtSDZTTEdvYVFRSzU2VmtaMTNWazloV3AtcTRpaUxfU1dl?oc=5",
+      "title": "ウルトラマンシリーズ60周年×鹿児島・栃木JA-SS『ウルトラSS級キャンペーン』始動！豪華賞品が当たる応募キャンペーン・限定グッズがもらえる来店特典・X投稿キャンペーンも実施！ - 円谷プロ公式サイト",
+      "summary": "ウルトラマンシリーズ60周年×鹿児島・栃木JA-SS『ウルトラSS級キャンペーン』始動！豪華賞品が当たる応募キャンペーン・限定グッズがもらえる来店特典・X投稿キャンペーンも実施！ 円谷プロ公式サイト",
+      "sourceId": "news-event",
+      "sourceName": "ニュース検索（イベント）",
+      "category": "news",
+      "publisherHost": "m-78.jp",
+      "publishedAt": "2026-09-27T03:00:00.000Z",
+      "eventDate": null,
+      "eventEndDate": null,
+      "prefectures": [
+        "栃木",
+        "鹿児島"
+      ],
+      "isKanto": true,
+      "titleKey": "ウルトラマンシリーズ周年×鹿児島栃木jassウルトラss級キャンペーン始動豪華賞品が当たる応募キャンペーン限定グッズがもらえる来店特典x投稿キャンペーンも円谷プロ公式サイト",
+      "altKey": "9e7c2cc2471e0ffc",
+      "firstSeen": "2026-09-29T06:27:14.348Z",
+      "batch": "2026-09-29T06:27:14.348Z"
     },
     {
       "id": "e97fe5c549b5ffae",
@@ -1036,25 +1058,6 @@
       "isKanto": false,
       "titleKey": "ウルトラマンはいかにして誕生からの年月を乗り越える大傑作となったのかその秘密を分析するウルトラマンintroductionその奇跡と苦闘が発売株式会社講談社のプレスリリースprtimes",
       "altKey": "dc68ca75be9cac21",
-      "firstSeen": "2026-09-28T06:09:44.060Z",
-      "batch": "2026-09-28T06:09:44.060Z"
-    },
-    {
-      "id": "a93335e80ba8a7cd",
-      "url": "https://news.google.com/rss/articles/CBMiREFVX3lxTFBGdVhQblNKS3QyQklSdmw2dkxyQTR3V1lyTFl6ZVY3OXpCRDlTVnNpWnN3NDZkTjBnZWpoeHhSVWdmeGp3?oc=5",
-      "title": "資料写真集 特撮アーカイブ『恐竜大戦争アイゼンボーグ』『恐竜戦隊コセイドン』2026年9月28日(月)発売！ - 円谷プロ公式サイト",
-      "summary": "資料写真集 特撮アーカイブ『恐竜大戦争アイゼンボーグ』『恐竜戦隊コセイドン』2026年9月28日(月)発売！ 円谷プロ公式サイト",
-      "sourceId": "news-sale",
-      "sourceName": "ニュース検索（特売・セール）",
-      "category": "sale",
-      "publisherHost": "m-78.jp",
-      "publishedAt": "2026-09-28T01:00:00.000Z",
-      "eventDate": "2026-09-28",
-      "eventEndDate": null,
-      "prefectures": [],
-      "isKanto": false,
-      "titleKey": "資料写真集特撮アーカイブ恐竜大戦争アイゼンボーグ恐竜戦隊コセイドン発売円谷プロ公式サイト",
-      "altKey": "91a0f73c4007e7ce",
       "firstSeen": "2026-09-28T06:09:44.060Z",
       "batch": "2026-09-28T06:09:44.060Z"
     },
