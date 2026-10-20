@@ -1,7 +1,7 @@
 {
-  "generatedAt": "2026-10-19T05:32:33.051Z",
-  "batchId": "2026-10-19T05:32:33.051Z",
-  "newCount": 7,
+  "generatedAt": "2026-10-20T05:35:54.613Z",
+  "batchId": "2026-10-20T05:35:54.613Z",
+  "newCount": 1,
   "items": [
     {
       "id": "aa2146b51620b2f7",
@@ -1213,6 +1213,25 @@
       "firstSeen": "2026-08-03T06:54:53.151Z",
       "batch": "2026-08-03",
       "eventEndDate": "2026-11-30"
+    },
+    {
+      "id": "def389ae002304cf",
+      "url": "https://news.google.com/rss/articles/CBMiWkFVX3lxTFBYQ0JpWEFDWWs2U3BhbGxMdDhlTS1iVkRMMXRrblJrWlpiUE1lY3dIdEN2b1U0R2NBNVJNa2ZQRW41WmFLWjRFYlRWSzJKdENpakxkaFRKeTZQQQ?oc=5",
+      "title": "“真アギト展”1日がかりの上映＆トークイベント開催決定。『ウルトラマンメビウス』ゾフィー回配信＆『オメガホーン』最新おもちゃ情報、など【3分でわかる今週の特撮最新情報（うま）：2026年10月】 - 電撃オンライン",
+      "summary": "“真アギト展”1日がかりの上映＆トークイベント開催決定。『ウルトラマンメビウス』ゾフィー回配信＆『オメガホーン』最新おもちゃ情報、など【3分でわかる今週の特撮最新情報（うま）：2026年10月】 電撃オンライン",
+      "sourceId": "news-event",
+      "sourceName": "ニュース検索（イベント）",
+      "category": "news",
+      "publisherHost": "dengekionline.com",
+      "publishedAt": "2026-10-19T22:30:00.000Z",
+      "eventDate": null,
+      "eventEndDate": null,
+      "prefectures": [],
+      "isKanto": false,
+      "titleKey": "真アギト展がかりの上映&トークイベントウルトラマンメビウスゾフィー回配信&オメガホーン最新おもちゃなど:】電撃オンライン",
+      "altKey": "a45338253f0dbc7a",
+      "firstSeen": "2026-10-20T05:35:54.613Z",
+      "batch": "2026-10-20T05:35:54.613Z"
     },
     {
       "id": "d2e5e57dbf88a6bf",
@@ -5653,25 +5672,6 @@
       "isKanto": false,
       "titleKey": "ゼロもセブンもねこちゃんにウルトラマンだにゃん発売auwebポータル",
       "altKey": "ab54975c1349d442",
-      "firstSeen": "2026-09-15T05:37:39.981Z",
-      "batch": "2026-09-15T05:37:39.981Z"
-    },
-    {
-      "id": "ca52f58c4dea1ae0",
-      "url": "https://news.google.com/rss/articles/CBMiVEFVX3lxTE1DM2Y0eTNoVFJMR2NCSGN5T1NpNjRmMWRiNWQ0ZHJnRU9PVzBSSGdPc1ZZclFjZjZYcWRLMUxrN2RjYUYxM0JDMXE2NjFOQlp0SmhYcA?oc=5",
-      "title": "ウルトラマンぬいぐるみ抽選で不正アクセス 当選者133人が“落選”扱いに - ASCII.jp",
-      "summary": "ウルトラマンぬいぐるみ抽選で不正アクセス 当選者133人が“落選”扱いに ASCII.jp",
-      "sourceId": "news-sale",
-      "sourceName": "ニュース検索（特売・セール）",
-      "category": "sale",
-      "publisherHost": "ascii.jp",
-      "publishedAt": "2026-09-14T08:15:00.000Z",
-      "eventDate": null,
-      "eventEndDate": null,
-      "prefectures": [],
-      "isKanto": false,
-      "titleKey": "ウルトラマンぬいぐるみ抽選で不正アクセス当選者人が落選扱いにasciijp",
-      "altKey": "ef06a7812fb69b54",
       "firstSeen": "2026-09-15T05:37:39.981Z",
       "batch": "2026-09-15T05:37:39.981Z"
     },
