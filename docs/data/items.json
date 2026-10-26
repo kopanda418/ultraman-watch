@@ -1,7 +1,7 @@
 {
-  "generatedAt": "2026-10-25T05:33:38.121Z",
-  "batchId": "2026-10-25T05:33:38.121Z",
-  "newCount": 3,
+  "generatedAt": "2026-10-26T05:38:58.963Z",
+  "batchId": "2026-10-26T05:38:58.963Z",
+  "newCount": 6,
   "items": [
     {
       "id": "aa2146b51620b2f7",
@@ -490,27 +490,6 @@
       "batch": "2026-08-06T05:32:35.562Z"
     },
     {
-      "id": "5db6b34159a1a8a0",
-      "url": "https://news.google.com/rss/articles/CBMiW0FVX3lxTFBoZHA0NTJMbGlHVGkwT04yRkdYVFdCRUExTUIxSUpzdDYtM25vWFR2cUc2cnRraklDQlNGU2prSC1xYUd3c2lULUVWeWNIU3ZFQjh0ZkNLd003cDg?oc=5",
-      "title": "古谷敏 絵画展 ～ウルトラマンを描くウルトラマン～(東京都)の情報 - ウォーカープラス",
-      "summary": "古谷敏 絵画展 ～ウルトラマンを描くウルトラマン～(東京都)の情報 ウォーカープラス",
-      "sourceId": "news-event",
-      "sourceName": "ニュース検索（イベント）",
-      "category": "news",
-      "publisherHost": "walkerplus.com",
-      "publishedAt": "2026-07-27T23:33:47.000Z",
-      "eventDate": null,
-      "eventEndDate": null,
-      "prefectures": [
-        "東京"
-      ],
-      "isKanto": true,
-      "titleKey": "古谷敏絵画展ウルトラマンを描くウルトラマンのウォーカープラス",
-      "altKey": "c9e209241de807d0",
-      "firstSeen": "2026-08-06T05:32:35.562Z",
-      "batch": "2026-08-06T05:32:35.562Z"
-    },
-    {
       "id": "3b1ff98cd3a10efb",
       "url": "https://news.google.com/rss/articles/CBMiakFVX3lxTE9Ub2Y2WGlpZ3B0R0NUenVKZGRkTlNJY0M5WjM5a3RRQzlvcDd0SHJjcU1iQWluWV9DUWRBZ1ozMkd3THpNaXoxOFRUbjFyZU1EWlREeUVCYUtOdE5WRk9tNjJzaDhnWVI0NVE?oc=5",
       "title": "昭和から令和まで世代を超えて愛される「ウルトラマンシリーズ」の多彩なグッズが集い、世界観が楽しめるオフィシャルショップ「ULTRAMAN STORE」が、東京・池袋と大阪・梅田にて2026年オープン！ - PR TIMES",
@@ -552,46 +531,6 @@
       "altKey": "75905959e5ab4e69",
       "firstSeen": "2026-08-04T05:25:13.687Z",
       "batch": "2026-08-04T05:25:13.687Z"
-    },
-    {
-      "id": "9612ad265448b73c",
-      "url": "https://news.google.com/rss/articles/CBMic0FVX3lxTE9ZMGQ0SmVvWEJxNGZRb1VDN0ctb1lCaVlWRC1raklmNFlkZy1jd1d0YmdaMkZMWm55SmY4bWpnOUZCMkFGV0paLVNwdTFOTUtROFpTbnI3b2RWVlVsQk1xUndhaUFTZlZoNVFIRVFzSzRCUUU?oc=5",
-      "title": "没入型体験イベント「ウルトラマンストーリーダイブ展」始まる 横浜｜tvkNEWSアーカイブ - テレビ神奈川",
-      "summary": "没入型体験イベント「ウルトラマンストーリーダイブ展」始まる 横浜｜tvkNEWSアーカイブ テレビ神奈川",
-      "sourceId": "news-event",
-      "sourceName": "ニュース検索（イベント）",
-      "category": "news",
-      "publisherHost": "tvk-yokohama.com",
-      "publishedAt": "2026-07-27T08:29:01.000Z",
-      "eventDate": null,
-      "eventEndDate": null,
-      "prefectures": [
-        "神奈川"
-      ],
-      "isKanto": true,
-      "titleKey": "没入型体験イベントウルトラマンストーリーダイブ展始まる横浜tvknewsアーカイブテレビ神奈川",
-      "altKey": "3a1d4f86e1443d9f",
-      "firstSeen": "2026-08-03T14:52:57.988Z",
-      "batch": "2026-08-03T14:52:57.988Z"
-    },
-    {
-      "id": "6f34cd22d270b60b",
-      "url": "https://news.google.com/rss/articles/CBMif0FVX3lxTE05ajJtWVpPRGk3RVREU1lYaFlOdGdlc1ZJNmxEZGdad2JWQ3ZQdHZyNUluYUZrd1U1NEhBang4dmJFdEI5NmFDNTdsQi1BYklkTS03ZVEyX2NCckdfSTJTSHdUa3VsV1lHTUxVY3hBR0pxQmVHck93dXR1ZHROalk?oc=5",
-      "title": "没入型体験イベント「ウルトラマンストーリーダイブ展」始まる 横浜（tvkニュース（テレビ神奈川）） - Yahoo!ニュース",
-      "summary": "没入型体験イベント「ウルトラマンストーリーダイブ展」始まる 横浜（tvkニュース（テレビ神奈川）） Yahoo!ニュース",
-      "sourceId": "news-event",
-      "sourceName": "ニュース検索（イベント）",
-      "category": "news",
-      "publishedAt": "2026-07-27T09:17:04.000Z",
-      "eventDate": null,
-      "prefectures": [
-        "神奈川"
-      ],
-      "isKanto": true,
-      "titleKey": "没入型体験イベントウルトラマンストーリーダイブ展始まる横浜)yahooニュース",
-      "altKey": "eabafab580949614",
-      "firstSeen": "2026-08-03T06:54:53.151Z",
-      "batch": "2026-08-03"
     },
     {
       "id": "54596ca88ed13266",
@@ -1041,6 +980,25 @@
       "batch": "2026-10-24T05:16:09.751Z"
     },
     {
+      "id": "dc626b88307cb368",
+      "url": "https://news.google.com/rss/articles/CBMiREFVX3lxTE1jOTRvSFVuN3dmSjY5cHBjUUtVM19FdEtsVm9vYVlabDVfSGY2UjFuTTJBSnFZamVsOGtFZFdUalFrRzVw?oc=5",
+      "title": "ウルトラマンシリーズ60周年記念ラベル・ウイスキー登場！抽選販売受付2026年11月10日(火)より開始！ - 円谷プロ公式サイト",
+      "summary": "ウルトラマンシリーズ60周年記念ラベル・ウイスキー登場！抽選販売受付2026年11月10日(火)より開始！ 円谷プロ公式サイト",
+      "sourceId": "news-event",
+      "sourceName": "ニュース検索（イベント）",
+      "category": "news",
+      "publisherHost": "m-78.jp",
+      "publishedAt": "2026-10-26T01:00:00.000Z",
+      "eventDate": "2026-11-10",
+      "eventEndDate": null,
+      "prefectures": [],
+      "isKanto": false,
+      "titleKey": "ウルトラマンシリーズ周年記念ラベルウイスキー登場抽選販売受付より開始円谷プロ公式サイト",
+      "altKey": "1b07d52e69035279",
+      "firstSeen": "2026-10-26T05:38:58.963Z",
+      "batch": "2026-10-26T05:38:58.963Z"
+    },
+    {
       "id": "89e5509c945510e2",
       "url": "https://news.google.com/rss/articles/CBMiX0FVX3lxTE03QUxrOUhoNEo4akZ3d1dyWUZnVDJ6NEZWNmZqUnZrbVYtRDBvT0lGTmNGVEU0LXFJdm93NDdHXzB1MlNmUkwxODVTOHROTmFKdk1qSjlSNHozRWhJazln?oc=5",
       "title": "【津市】ウルトラマンもやってくる♪「トラックフェスタ2026」が11月1日にMieMu（みえむ）で開催。 - 号外NET 津市",
@@ -1058,6 +1016,25 @@
       "altKey": "0258aa9f35d6a429",
       "firstSeen": "2026-10-16T05:19:28.372Z",
       "batch": "2026-10-16T05:19:28.372Z"
+    },
+    {
+      "id": "5d139c758f5f1ced",
+      "url": "https://news.google.com/rss/articles/CBMie0FVX3lxTFBuZ1pLU0pzUjVEN3E3bjVyY3FuZUp6c1QzbDdBTGlLZWJpaW1lNFRHcjBNQUpna0E1ZGY0ZDM1RVBvT3NGa25ZR25sYjdUR21WenpOaENTVWhGT3MxZl9sNENybUJrMHI5OUtEdzBiQjhPenNTZ2U2Tm9lWQ?oc=5",
+      "title": "ウルトラマンティガ × アベイル グッズ 10月31日より発売! - コラボカフェ",
+      "summary": "ウルトラマンティガ × アベイル グッズ 10月31日より発売! コラボカフェ",
+      "sourceId": "news-sale",
+      "sourceName": "ニュース検索（特売・セール）",
+      "category": "sale",
+      "publisherHost": "collabo-cafe.com",
+      "publishedAt": "2026-10-26T04:08:49.000Z",
+      "eventDate": "2026-10-31",
+      "eventEndDate": null,
+      "prefectures": [],
+      "isKanto": false,
+      "titleKey": "ウルトラマンティガ×アベイルグッズより発売コラボカフェ",
+      "altKey": "117a73cc2808f6f0",
+      "firstSeen": "2026-10-26T05:38:58.963Z",
+      "batch": "2026-10-26T05:38:58.963Z"
     },
     {
       "id": "dd047d38177fc10c",
@@ -1098,6 +1075,25 @@
       "altKey": "749a3e789c3360d8",
       "firstSeen": "2026-10-17T05:14:13.065Z",
       "batch": "2026-10-17T05:14:13.065Z"
+    },
+    {
+      "id": "ee1c930d07353913",
+      "url": "https://news.google.com/rss/articles/CBMiREFVX3lxTE9ld21KQVJiT1dMWC1CRFNQYUE0ajQyLWRvUDZsbkhvS3hDYVluYjZUdHpzUEFMRjA1c1FjWWZqOFRPQmhE?oc=5",
+      "title": "『快獣ブースカ』POP UP SHOP「ほのぼの商店街」がルミネエスト新宿にて2026年10月28日(水)より開催！新作グッズが多数登場 - 円谷プロ公式サイト",
+      "summary": "『快獣ブースカ』POP UP SHOP「ほのぼの商店街」がルミネエスト新宿にて2026年10月28日(水)より開催！新作グッズが多数登場 円谷プロ公式サイト",
+      "sourceId": "news-show",
+      "sourceName": "ニュース検索（ショー）",
+      "category": "news",
+      "publisherHost": "m-78.jp",
+      "publishedAt": "2026-10-26T04:00:00.000Z",
+      "eventDate": "2026-10-28",
+      "eventEndDate": null,
+      "prefectures": [],
+      "isKanto": false,
+      "titleKey": "快獣ブースカpopupshopほのぼの商店街がルミネエスト新宿にてより新作グッズが多数登場円谷プロ公式サイト",
+      "altKey": "cd11153940ad004c",
+      "firstSeen": "2026-10-26T05:38:58.963Z",
+      "batch": "2026-10-26T05:38:58.963Z"
     },
     {
       "id": "a56ef3182dbc4e75",
@@ -1213,6 +1209,63 @@
       "firstSeen": "2026-08-03T06:54:53.151Z",
       "batch": "2026-08-03",
       "eventEndDate": "2026-11-30"
+    },
+    {
+      "id": "521a7ad122485035",
+      "url": "https://news.google.com/rss/articles/CBMiV0FVX3lxTFBSQ3Rla2FxaFo2NzVtQUtRNHNJVTREQ1lpMEROWHhpTlRnUFFjeUlCYUNQa2hTa3V4X21WSlNiMC1iVS1vc0pnNXl0NmFCTlZDaUEySXVZdw?oc=5",
+      "title": "ウルトラマンタロウ 胸像ライト｜ウルトラマンのプライズ 入荷予定・取扱店舗 - キャラグー",
+      "summary": "ウルトラマンタロウ 胸像ライト｜ウルトラマンのプライズ 入荷予定・取扱店舗 キャラグー",
+      "sourceId": "news-event",
+      "sourceName": "ニュース検索（イベント）",
+      "category": "news",
+      "publisherHost": "charagoo.jp",
+      "publishedAt": "2026-10-01T07:00:00.000Z",
+      "eventDate": null,
+      "eventEndDate": null,
+      "prefectures": [],
+      "isKanto": false,
+      "titleKey": "ウルトラマンタロウ胸像ライトウルトラマンのプライズ入荷予定取扱店舗キャラグー",
+      "altKey": "7ab83bfbe3808ee3",
+      "firstSeen": "2026-10-26T05:38:58.963Z",
+      "batch": "2026-10-26T05:38:58.963Z"
+    },
+    {
+      "id": "80dcb94ebe8f2100",
+      "url": "https://news.google.com/rss/articles/CBMiWkFVX3lxTE1paUdWWTdvOVpJQ3JaYWR0cmZnWnh2ajVTOVJhdmpUS2VXclZ1cEdoYjAtcVJ5dks0aWhvOUVkNmhvZGpkLWp6SkxMcXNYTUd4aFNiQk53NVZpdw?oc=5",
+      "title": "開催中の『TIPSTAR』と『ウルトラマン』のコラボを特撮大好きライターが体験。登場ポーズが飛び交う応援に大興奮！ - 電撃オンライン",
+      "summary": "開催中の『TIPSTAR』と『ウルトラマン』のコラボを特撮大好きライターが体験。登場ポーズが飛び交う応援に大興奮！ 電撃オンライン",
+      "sourceId": "news-show",
+      "sourceName": "ニュース検索（ショー）",
+      "category": "news",
+      "publisherHost": "dengekionline.com",
+      "publishedAt": "2026-10-17T23:28:00.000Z",
+      "eventDate": null,
+      "eventEndDate": null,
+      "prefectures": [],
+      "isKanto": false,
+      "titleKey": "中のtipstarとウルトラマンのコラボを特撮大好きライターが体験登場ポーズが飛び交う応援に大興奮電撃オンライン",
+      "altKey": "480279325dd58e13",
+      "firstSeen": "2026-10-26T05:38:58.963Z",
+      "batch": "2026-10-26T05:38:58.963Z"
+    },
+    {
+      "id": "3ed084046a0d8087",
+      "url": "https://news.google.com/rss/articles/CBMiekFVX3lxTE1aYnJIZzlfQWpCVWdIZjVacHl4LXhtQUhWS3h5NF9oRHY3cUFxeTlpei1QSVlMa3FkQnlIWWZGWjVrMExPLWd1clN6RzE5TGhYcFE2dDRzb2NVV3ZaZzJQZndCbTRjdVBuaDJFYjhUODB4SEw4Z2xpUDZB?oc=5",
+      "title": "ガシャポン「HG ウルトラマン 60周年記念弾」が発売！「初代ウルトラマン（Aタイプ）」や「エリ巻恐竜 ジラース」など全4種 1枚目の写真・画像 - インサイド",
+      "summary": "ガシャポン「HG ウルトラマン 60周年記念弾」が発売！「初代ウルトラマン（Aタイプ）」や「エリ巻恐竜 ジラース」など全4種 1枚目の写真・画像 インサイド",
+      "sourceId": "news-sale",
+      "sourceName": "ニュース検索（特売・セール）",
+      "category": "sale",
+      "publisherHost": "inside-games.jp",
+      "publishedAt": "2026-10-25T02:20:03.000Z",
+      "eventDate": null,
+      "eventEndDate": null,
+      "prefectures": [],
+      "isKanto": false,
+      "titleKey": "ガシャポンhgウルトラマン周年記念弾が発売初代ウルトラマンやエリ巻恐竜ジラースなど全種枚目の写真画像インサイド",
+      "altKey": "d0a2258caa08cc21",
+      "firstSeen": "2026-10-26T05:38:58.963Z",
+      "batch": "2026-10-26T05:38:58.963Z"
     },
     {
       "id": "e19cc06fb0545727",
@@ -5697,44 +5750,6 @@
       "batch": "2026-09-17T05:38:33.611Z"
     },
     {
-      "id": "4bd001122a3d376d",
-      "url": "https://news.google.com/rss/articles/CBMiTEFVX3lxTE8yb0J5SmQxeVVRSGFpc2VzcDNJUjU5azlqSHcxVjBFcmpvT2wwYV9FSVBfUzlLVFVENW5ibkZsbzVXVnR5RUR1MUxpZmk?oc=5",
-      "title": "ウルトラマン3作のサントラ同時発売「X」「オーブ」「ジード」 - ナタリー",
-      "summary": "ウルトラマン3作のサントラ同時発売「X」「オーブ」「ジード」 ナタリー",
-      "sourceId": "news-event",
-      "sourceName": "ニュース検索（イベント）",
-      "category": "news",
-      "publisherHost": "natalie.mu",
-      "publishedAt": "2026-08-26T07:00:00.000Z",
-      "eventDate": null,
-      "eventEndDate": null,
-      "prefectures": [],
-      "isKanto": false,
-      "titleKey": "ウルトラマン作のサントラ同時発売xオーブジードナタリー",
-      "altKey": "9efd7bcdd6b22148",
-      "firstSeen": "2026-09-17T05:38:33.611Z",
-      "batch": "2026-09-17T05:38:33.611Z"
-    },
-    {
-      "id": "5d46edf06bb498bd",
-      "url": "https://news.google.com/rss/articles/CBMiQ0FVX3lxTE5WZ2lfUEFCeExmWkZsa3VkRnU3d1pqdTFiOHdSSkF1Nk5obi1ON1ZELW1xTXRjZW9XNEF1WDBxU1hOWFk?oc=5",
-      "title": "「1973年版」って何がどう違う？ 保護者困惑の公式「ウルトラマン」ソフビ、最近のマニアック化 - マグミクス",
-      "summary": "「1973年版」って何がどう違う？ 保護者困惑の公式「ウルトラマン」ソフビ、最近のマニアック化 マグミクス",
-      "sourceId": "news-sale",
-      "sourceName": "ニュース検索（特売・セール）",
-      "category": "sale",
-      "publisherHost": "magmix.jp",
-      "publishedAt": "2026-09-05T21:50:00.000Z",
-      "eventDate": null,
-      "eventEndDate": null,
-      "prefectures": [],
-      "isKanto": false,
-      "titleKey": "版って何がどう違う保護者困惑の公式ウルトラマンソフビ最近のマニアック化マグミクス",
-      "altKey": "07cb8b047b5e09e0",
-      "firstSeen": "2026-09-14T05:36:25.321Z",
-      "batch": "2026-09-14T05:36:25.321Z"
-    },
-    {
       "id": "ed003cf24396e68e",
       "url": "https://news.google.com/rss/articles/CBMihAFBVV95cUxQLWs5SUF2V0xFMHBtLVVVYmR3S2lSOVRsc2JWZFgydlFSWkNVUDAyckJFVmVFVDJ0UGZRd19zOHlUeWNSWW9zYlFWbDBzNUkwZnJuVW00VFZMYTFJeEp2SmVMMFV5bzhMVlVyNUVRME1semhyVGpqLVptcjRTMnllR1J0N1U?oc=5",
       "title": "「ウルトラマン」シリーズ60周年記念コレクションシールがカッコ良い！全て光り輝く豪華仕様、イラストはオリジナル描き起こし採用の全32種 - s.inside-games.jp",
@@ -5790,23 +5805,6 @@
       "altKey": "06a64ea72db6eff0",
       "firstSeen": "2026-08-04T05:25:13.687Z",
       "batch": "2026-08-04T05:25:13.687Z"
-    },
-    {
-      "id": "75450394c285a335",
-      "url": "https://m-78.jp/news/post-7921",
-      "title": "60周年記念「ウルトラマン」純金(24K)製プレミアムフィギュア＆「ウルトラ6兄弟」18金製ミニフィギュアが登場！特典つきで世界限定各60セット",
-      "summary": "ウルトラマンシリーズ60周年を記念し、純金(24K)製「ウルトラマン プレミアムフィギュア」と、黄金に輝く「ウルトラ6兄弟」の18金製ミニフィギュアがキャラクタージュエリーブランド「ユートレジャー」にて予約受付が開始にな […]",
-      "sourceId": "tsuburaya-news",
-      "sourceName": "円谷ステーション",
-      "category": "official",
-      "publishedAt": "2026-07-28T03:00:00.000Z",
-      "eventDate": null,
-      "prefectures": [],
-      "isKanto": false,
-      "titleKey": "周年記念ウルトラマン純金製プレミアムフィギュア&ウルトラ兄弟金製ミニフィギュアが登場特典つきで世界限定各セット",
-      "altKey": "d6934071c0e2233d",
-      "firstSeen": "2026-08-03T06:54:53.151Z",
-      "batch": "2026-08-03"
     }
   ]
 }
