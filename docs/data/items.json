@@ -1,7 +1,7 @@
 {
-  "generatedAt": "2026-11-06T07:32:15.823Z",
-  "batchId": "2026-11-06T07:32:15.823Z",
-  "newCount": 2,
+  "generatedAt": "2026-11-07T06:44:51.919Z",
+  "batchId": "2026-11-07T06:44:51.919Z",
+  "newCount": 1,
   "items": [
     {
       "id": "aa2146b51620b2f7",
@@ -1184,6 +1184,25 @@
       "firstSeen": "2026-08-03T06:54:53.151Z",
       "batch": "2026-08-03",
       "eventEndDate": "2026-11-30"
+    },
+    {
+      "id": "4656bd5ec07dcc19",
+      "url": "https://news.google.com/rss/articles/CBMiUEFVX3lxTFBWZ0k2OG41NjZubnZIT3cxLU8ydTR1SV91eVBqWV8tMzRwNnNyUkNQaUV4MGV2T2RNZlV2bXBhV0w4WXJvT2l3RFZXVkJyQlpo?oc=5",
+      "title": "カリスマ俳優の命日 意外な接点あったウルトラ女優が追悼「演じながら自分を見つめる冷めた目があった」 - よろず〜ニュース",
+      "summary": "カリスマ俳優の命日 意外な接点あったウルトラ女優が追悼「演じながら自分を見つめる冷めた目があった」 よろず〜ニュース",
+      "sourceId": "news-event",
+      "sourceName": "ニュース検索（イベント）",
+      "category": "news",
+      "publisherHost": "yorozoonews.jp",
+      "publishedAt": "2026-11-05T22:10:00.000Z",
+      "eventDate": null,
+      "eventEndDate": null,
+      "prefectures": [],
+      "isKanto": false,
+      "titleKey": "カリスマ俳優の命日意外な接点あったウルトラ女優が追悼演じながら自分を見つめる冷めた目があったよろずニュース",
+      "altKey": "6a335cf5d049a014",
+      "firstSeen": "2026-11-07T06:44:51.919Z",
+      "batch": "2026-11-07T06:44:51.919Z"
     },
     {
       "id": "aa10cafcb83f2810",
@@ -5756,25 +5775,6 @@
       "isKanto": false,
       "titleKey": "ウルトラマンのガチャガチャ最新一覧新作の発売日と設置場所まとめキャラグー",
       "altKey": "2968b82975e10293",
-      "firstSeen": "2026-09-24T05:42:02.639Z",
-      "batch": "2026-09-24T05:42:02.639Z"
-    },
-    {
-      "id": "c3e3d31791afbd02",
-      "url": "https://news.google.com/rss/articles/CBMiXEFVX3lxTE4yUDNIQmdlb29DOW1ZX3ZvQ25VVEViNU53WWluOGY2ZG1SZHZqZ3pKcGxScmNDcS1YVmJwNVkxaHVsTzVvdFF2dGJFZEY1NS1KOExIZm1vRDJDak5U?oc=5",
-      "title": "躍動感あってかっこいい！イベント限定【ウルトラヒーローシリーズSP】ウルトラマンスペシウム光線ver & ゾフィーM87光線シャイニークリアレッドをレビューしますっ - YouTube",
-      "summary": "躍動感あってかっこいい！イベント限定【ウルトラヒーローシリーズSP】ウルトラマンスペシウム光線ver & ゾフィーM87光線シャイニークリアレッドをレビューしますっ YouTube",
-      "sourceId": "news-event",
-      "sourceName": "ニュース検索（イベント）",
-      "category": "news",
-      "publisherHost": "youtu.be",
-      "publishedAt": "2026-09-14T07:00:00.000Z",
-      "eventDate": null,
-      "eventEndDate": null,
-      "prefectures": [],
-      "isKanto": false,
-      "titleKey": "躍動感あってかっこいいイベント限定ウルトラマンスペシウム光線ver&ゾフィーm光線シャイニークリアレッドをレビューしますっyoutube",
-      "altKey": "892911ad190ad22f",
       "firstSeen": "2026-09-24T05:42:02.639Z",
       "batch": "2026-09-24T05:42:02.639Z"
     },
