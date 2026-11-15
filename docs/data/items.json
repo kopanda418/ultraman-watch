@@ -1,7 +1,7 @@
 {
-  "generatedAt": "2026-11-14T07:15:00.619Z",
-  "batchId": "2026-11-14T07:15:00.619Z",
-  "newCount": 4,
+  "generatedAt": "2026-11-15T07:24:04.958Z",
+  "batchId": "2026-11-15T07:24:04.958Z",
+  "newCount": 0,
   "items": [
     {
       "id": "aa2146b51620b2f7",
@@ -23,48 +23,6 @@
       "altKey": "96cbe557c0aca123",
       "firstSeen": "2026-10-02T06:30:12.896Z",
       "batch": "2026-10-02T06:30:12.896Z"
-    },
-    {
-      "id": "dc3d45701e0e44de",
-      "url": "https://news.google.com/rss/articles/CBMiREFVX3lxTE9YVFhtZHhPcmN3cVFYYWpoUVlBaXRVRlVNTzA5Qld1aWxhNV9DbUhKZW5KT3Nnbzd3ZnVrLUhWenF0S2dM?oc=5",
-      "title": "「ウルトラヒーローズ THE LIVE」千葉県柏公演2026年11月14日(土)開催！ – ウルトラマン・円谷プロ公式 - m-78.jp",
-      "summary": "「ウルトラヒーローズ THE LIVE」千葉県柏公演2026年11月14日(土)開催！ – ウルトラマン・円谷プロ公式 m-78.jp",
-      "sourceId": "news-event",
-      "sourceName": "ニュース検索（イベント）",
-      "category": "news",
-      "publisherHost": "m-78.jp",
-      "publishedAt": "2026-07-17T07:00:00.000Z",
-      "eventDate": "2026-11-14",
-      "eventEndDate": null,
-      "prefectures": [
-        "千葉"
-      ],
-      "isKanto": true,
-      "titleKey": "ウルトラヒーローズthelive千葉県柏公演ウルトラマン円谷プロ公式mjp",
-      "altKey": "e514d26c31720167",
-      "firstSeen": "2026-08-04T11:43:25.132Z",
-      "batch": "2026-08-04T11:43:25.132Z"
-    },
-    {
-      "id": "969cf75fa4ae23b4",
-      "url": "https://imagination.m-78.jp/contents/News_01765",
-      "title": "【チケット情報】「ウルトラヒーローズ THE LIVE」千葉県柏公演2026年11月14日（土）開催！",
-      "summary": "",
-      "sourceId": "imagination-event",
-      "sourceName": "円谷イマジネーション（イベント情報）",
-      "category": "official",
-      "publisherHost": null,
-      "publishedAt": "2026-07-17T09:00:00.000Z",
-      "eventDate": "2026-11-14",
-      "eventEndDate": null,
-      "prefectures": [
-        "千葉"
-      ],
-      "isKanto": true,
-      "titleKey": "ウルトラヒーローズthelive千葉県柏公演",
-      "altKey": "c2f213186bdf2c6b",
-      "firstSeen": "2026-08-03T14:52:57.988Z",
-      "batch": "2026-08-03T14:52:57.988Z"
     },
     {
       "id": "7ba1d73fb6e70059",
@@ -5796,25 +5754,6 @@
       "altKey": "02ffa88b16542d10",
       "firstSeen": "2026-09-10T05:28:36.026Z",
       "batch": "2026-09-10T05:28:36.026Z"
-    },
-    {
-      "id": "5603284a868818ca",
-      "url": "https://news.google.com/rss/articles/CBMiREFVX3lxTE5wMTExMXppRDdBdTM0ZUN6NDdVN2NtUE9wMlhoaTY1OG0zMWFINFNwRkxHR1p2VGJFYUEybXJ2Y3FZMGpr?oc=5",
-      "title": "ウルトラマンテオのプリントケーキ＆ハロウィンクッキーがプリロールから販売開始！ - 円谷プロ公式サイト",
-      "summary": "ウルトラマンテオのプリントケーキ＆ハロウィンクッキーがプリロールから販売開始！ 円谷プロ公式サイト",
-      "sourceId": "news-sale",
-      "sourceName": "ニュース検索（特売・セール）",
-      "category": "sale",
-      "publisherHost": "m-78.jp",
-      "publishedAt": "2026-08-17T03:00:00.000Z",
-      "eventDate": null,
-      "eventEndDate": null,
-      "prefectures": [],
-      "isKanto": false,
-      "titleKey": "ウルトラマンテオのプリントケーキ&ハロウィンクッキーがプリロールから販売開始円谷プロ公式サイト",
-      "altKey": "0266fe05cd580025",
-      "firstSeen": "2026-08-18T02:11:52.345Z",
-      "batch": "2026-08-18T02:11:52.345Z"
     }
   ]
 }
