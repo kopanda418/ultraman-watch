@@ -1,7 +1,7 @@
 {
-  "generatedAt": "2026-11-21T07:54:28.916Z",
-  "batchId": "2026-11-21T07:54:28.916Z",
-  "newCount": 6,
+  "generatedAt": "2026-11-22T07:40:30.142Z",
+  "batchId": "2026-11-22T07:40:30.142Z",
+  "newCount": 1,
   "items": [
     {
       "id": "4b275ba953981a17",
@@ -1199,25 +1199,6 @@
       "batch": "2026-10-24T05:16:09.751Z"
     },
     {
-      "id": "311ec07a908b3719",
-      "url": "https://news.google.com/rss/articles/CBMiREFVX3lxTE5SejBjYzJuODBObUJESkhhN29RbHI3VWQyTFB1bmk2eXRVdzMwSEV3YmJVQzFmS1FmR1Rac1lZUEZrdXBo?oc=5",
-      "title": "「ウルトラヒーローズ THE LIVE 〜英雄への道〜 in 博品館劇場」2026年11月21日(土)〜23日(月・祝)開催決定！ - 円谷プロ公式サイト",
-      "summary": "「ウルトラヒーローズ THE LIVE 〜英雄への道〜 in 博品館劇場」2026年11月21日(土)〜23日(月・祝)開催決定！ 円谷プロ公式サイト",
-      "sourceId": "news-event",
-      "sourceName": "ニュース検索（イベント）",
-      "category": "news",
-      "publisherHost": "m-78.jp",
-      "publishedAt": "2026-09-04T08:00:00.000Z",
-      "eventDate": "2026-11-21",
-      "eventEndDate": null,
-      "prefectures": [],
-      "isKanto": false,
-      "titleKey": "ウルトラヒーローズthelive英雄への道in博品館劇場円谷プロ公式サイト",
-      "altKey": "7b019dd5824df008",
-      "firstSeen": "2026-09-05T05:06:53.493Z",
-      "batch": "2026-09-05T05:06:53.493Z"
-    },
-    {
       "id": "70b5d920d5ed4430",
       "url": "https://news.google.com/rss/articles/CBMiREFVX3lxTFBxYnNGT0dneFl5M2NMbmhSY05PR3V5UU9qS0tuWHgwS09qQUVGRXlVVEtPTUFYRm5nZndrSHNybEpyQnQz?oc=5",
       "title": "ウルトラマンティガ 30周年記念写真展「BEYOND THE LIGHT」全国のソニーストアで巡回開催！大阪で10月31日(土)よりスタート！写真集11月27日(金)から発売 - 円谷プロ公式サイト",
@@ -1333,6 +1314,25 @@
       "firstSeen": "2026-08-03T06:54:53.151Z",
       "batch": "2026-08-03",
       "eventEndDate": "2026-11-30"
+    },
+    {
+      "id": "50dcb947985f4726",
+      "url": "https://news.google.com/rss/articles/CBMiXkFVX3lxTFAzS28tYWdXNXpmX05xczVYbDRCR25EcjdOT19PbHZzNTIxblplOEVhMHhfNTc2YkZHWTliT2hwemktYVRDVmNqSGQ0Z1V6QmhGWHNadU10V3FmWVJPalE?oc=5",
+      "title": "UltraLMTM 1期生初のグッズおよびボイスStarter Package発売 - Dellows News",
+      "summary": "UltraLMTM 1期生初のグッズおよびボイスStarter Package発売 Dellows News",
+      "sourceId": "news-sale",
+      "sourceName": "ニュース検索（特売・セール）",
+      "category": "sale",
+      "publisherHost": "news.dellows.jp",
+      "publishedAt": "2026-10-07T07:00:00.000Z",
+      "eventDate": null,
+      "eventEndDate": null,
+      "prefectures": [],
+      "isKanto": false,
+      "titleKey": "ultralmtm期生初のグッズおよびボイスstarterpackage発売dellowsnews",
+      "altKey": "bd2433a1d9fcd3d0",
+      "firstSeen": "2026-11-22T07:40:30.142Z",
+      "batch": "2026-11-22T07:40:30.142Z"
     },
     {
       "id": "33e91da258e26dc4",
